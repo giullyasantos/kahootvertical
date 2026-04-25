@@ -39,7 +39,7 @@ function WatchGameContent() {
     currentQuestionIndex
   );
   const [viewMode, setViewMode] = useState<ViewMode>('question');
-  const [timeLeft, setTimeLeft] = useState(20);
+  const [timeLeft, setTimeLeft] = useState(60);
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -93,7 +93,7 @@ function WatchGameContent() {
   useEffect(() => {
     if (room?.phase !== 'finished') {
       setViewMode('question');
-      setTimeLeft(20);
+      setTimeLeft(60);
     }
   }, [currentQuestionIndex, room?.phase]);
 
@@ -166,7 +166,7 @@ function WatchGameContent() {
           <div className="flex gap-3 md:gap-4">
             {viewMode === 'question' && (
               <div className={`border-4 border-black shadow-[4px_4px_0px_#000] p-4 md:p-5 flex items-center gap-3 rounded-2xl ${
-                timeLeft <= 5 ? 'bg-red-500' : timeLeft <= 10 ? 'bg-yellow-500' : 'bg-green-500'
+                timeLeft <= 10 ? 'bg-red-500' : timeLeft <= 30 ? 'bg-yellow-500' : 'bg-green-500'
               }`}>
                 <span className="text-3xl md:text-4xl font-black text-white">{timeLeft}</span>
                 <p className="text-xs md:text-sm font-bold text-white uppercase">segundos</p>
