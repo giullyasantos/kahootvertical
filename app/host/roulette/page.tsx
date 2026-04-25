@@ -49,9 +49,6 @@ function HostRouletteContent() {
         console.log('Host received difficulty:', payload);
         setDifficulty(payload.payload?.difficulty);
         setPhase('difficulty-revealed');
-        setTimeout(() => {
-          revealQuestion();
-        }, 2000);
       })
       .subscribe();
 
@@ -59,6 +56,20 @@ function HostRouletteContent() {
       supabase.removeChannel(channel);
     };
   }, [room]);
+
+  // Auto-reveal question after difficulty is shown
+  useEffect(() => {
+    if (phase === 'difficulty-revealed' && difficulty) {
+      const timer = setTimeout(() => {
+        const questions = rouletteQuestions[difficulty];
+        const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+        setCurrentQuestion(randomQuestion);
+        setPhase('question-revealed');
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [phase, difficulty]);
 
 
   const availablePlayers = players.filter((p) => !p.has_played_roulette);
@@ -108,14 +119,6 @@ function HostRouletteContent() {
     }, 100);
   }
 
-  function revealQuestion() {
-    if (!difficulty) return;
-
-    const questions = rouletteQuestions[difficulty];
-    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-    setCurrentQuestion(randomQuestion);
-    setPhase('question-revealed');
-  }
 
   async function awardPoints(points: number) {
     if (!selectedPlayer || !room) return;
