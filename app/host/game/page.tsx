@@ -352,13 +352,13 @@ function HostGameContent() {
 
                   <div className="brutal-card p-12 md:p-16 bg-gradient-to-br from-purple-400 to-purple-500">
                     <div className="text-9xl mb-6">🎯</div>
-                    <h3 className="text-4xl md:text-6xl font-black text-white uppercase mb-6">
+                    <h3 className="text-4xl md:text-6xl font-black text-black uppercase mb-6">
                       PRÓXIMA FASE:
                     </h3>
-                    <p className="text-3xl md:text-5xl font-black text-white uppercase">
+                    <p className="text-3xl md:text-5xl font-black text-black uppercase">
                       Putting on the Spot
                     </p>
-                    <p className="text-xl md:text-2xl font-bold text-white/90 mt-6">
+                    <p className="text-xl md:text-2xl font-bold text-black/90 mt-6">
                       a roleta vai escolher quem responde! 😱
                     </p>
                   </div>
