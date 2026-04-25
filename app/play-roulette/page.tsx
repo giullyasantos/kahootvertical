@@ -16,7 +16,6 @@ type RoulettePhase =
   | 'waiting'
   | 'selected'
   | 'spin-difficulty'
-  | 'superpower-window'
   | 'question-time'
   | 'finished';
 
@@ -45,8 +44,6 @@ function PlayRouletteContent() {
   const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null);
-  const [superpowerTimer, setSuperpowerTimer] = useState(15);
-  const [currentQuestion, setCurrentQuestion] = useState<string>('');
   const [isMyTurn, setIsMyTurn] = useState(false);
 
   const currentPlayer = players.find((p) => p.id === playerId);
@@ -102,19 +99,11 @@ function PlayRouletteContent() {
       .on('broadcast', { event: 'difficulty_result' }, (payload: any) => {
         if (payload.payload?.difficulty) {
           setSelectedDifficulty(payload.payload.difficulty);
-          // Only show superpower window if it's MY turn
-          if (isMyTurn) {
-            setPhase('superpower-window');
-            setSuperpowerTimer(15);
-          }
-        }
-      })
-      .on('broadcast', { event: 'question_revealed' }, (payload: any) => {
-        if (payload.payload?.question) {
-          setCurrentQuestion(payload.payload.question);
           // Only show question if it's MY turn
           if (isMyTurn) {
-            setPhase('question-time');
+            setTimeout(() => {
+              setPhase('question-time');
+            }, 2000);
           }
         }
       })
@@ -125,23 +114,6 @@ function PlayRouletteContent() {
     };
   }, [room, currentPlayer]);
 
-  useEffect(() => {
-    if (phase === 'superpower-window' && superpowerTimer > 0 && isMyTurn) {
-      const interval = setInterval(() => {
-        setSuperpowerTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            // Hide superpower window when timer ends
-            setPhase('question-time');
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [phase, superpowerTimer, isMyTurn]);
 
   async function spinDifficulty() {
     if (spinning) return;
@@ -176,34 +148,6 @@ function PlayRouletteContent() {
     }, 100);
   }
 
-  async function activateSuperpower(type: 'friend_lifeline' | 'double_points') {
-    if (!room || !currentPlayer || superpowerTimer === 0) return;
-
-    const supabase = createClient();
-
-    if (type === 'friend_lifeline') {
-      await supabase
-        .from('players')
-        .update({ friend_lifeline_used: true })
-        .eq('id', currentPlayer.id);
-    } else if (type === 'double_points' && currentTeam) {
-      await supabase
-        .from('teams')
-        .update({ double_points_used: true })
-        .eq('id', currentTeam.id);
-    }
-
-    const channel = supabase.channel(`roulette:${room.id}`);
-    channel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        await channel.send({
-          type: 'broadcast',
-          event: 'superpower_activated',
-          payload: { type },
-        });
-      }
-    });
-  }
 
   if (roomLoading || !room || !currentPlayer) {
     return (
@@ -300,75 +244,6 @@ function PlayRouletteContent() {
                 >
                   {spinning ? '🎰 escolhendo...' : '🎯 ESCOLHER'}
                 </motion.button>
-              </div>
-            </motion.div>
-          )}
-
-          {phase === 'superpower-window' && (
-            <motion.div
-              key="superpower-window"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="w-full max-w-lg space-y-10"
-            >
-              <div className="text-center">
-                <h2 className="text-3xl md:text-4xl font-black text-black uppercase mb-6">
-                  superpoderes ⚡
-                </h2>
-                <div className="text-7xl md:text-8xl font-black text-black">{superpowerTimer}s</div>
-              </div>
-
-              <div className="space-y-6">
-                <motion.button
-                  whileHover={{ scale: currentPlayer.friend_lifeline_used ? 1 : 1.02 }}
-                  whileTap={{ scale: currentPlayer.friend_lifeline_used ? 1 : 0.98 }}
-                  onClick={() => activateSuperpower('friend_lifeline')}
-                  disabled={currentPlayer.friend_lifeline_used}
-                  className={`brutal-card w-full p-8 flex items-center gap-5 ${
-                    currentPlayer.friend_lifeline_used ? 'opacity-40' : ''
-                  }`}
-                >
-                  <div className="text-5xl">🔵</div>
-                  <div className="flex-1 text-left">
-                    <p className="text-2xl md:text-3xl font-black text-black uppercase">
-                      🔵 Checar com Amigos
-                    </p>
-                    <p className="text-base md:text-lg font-bold text-black/60 mt-1">consulta o time por 15s</p>
-                    {currentPlayer.friend_lifeline_used && (
-                      <p className="text-lg md:text-xl font-bold text-black/60 uppercase mt-1">já usado</p>
-                    )}
-                  </div>
-                </motion.button>
-
-                {isCaptain && (
-                  <motion.button
-                    whileHover={{ scale: currentTeam?.double_points_used ? 1 : 1.02 }}
-                    whileTap={{ scale: currentTeam?.double_points_used ? 1 : 0.98 }}
-                    onClick={() => activateSuperpower('double_points')}
-                    disabled={currentTeam?.double_points_used}
-                    className={`brutal-card w-full p-8 flex items-center gap-5 ${
-                      currentTeam?.double_points_used ? 'opacity-40' : ''
-                    }`}
-                  >
-                    <div className="text-5xl">🟡</div>
-                    <div className="flex-1 text-left">
-                      <p className="text-2xl md:text-3xl font-black text-black uppercase">
-                        🟡 Double Points
-                      </p>
-                      <p className="text-base md:text-lg font-bold text-black/60 mt-1">dobra os pontos (só capitão)</p>
-                      {isCaptain && (
-                        <p className="text-base font-bold text-purple-600 mt-1">você é o capitão 👑</p>
-                      )}
-                      {!isCaptain && (
-                        <p className="text-base font-bold text-black/60 mt-1">só o capitão pode usar Double Points</p>
-                      )}
-                      {currentTeam?.double_points_used && (
-                        <p className="text-lg md:text-xl font-bold text-black/60 uppercase mt-1">já usado</p>
-                      )}
-                    </div>
-                  </motion.button>
-                )}
               </div>
             </motion.div>
           )}

@@ -15,7 +15,6 @@ type RoulettePhase =
   | 'name-roulette'
   | 'waiting-difficulty'
   | 'difficulty-revealed'
-  | 'superpower-window'
   | 'question-revealed'
   | 'final-results';
 
@@ -32,9 +31,6 @@ function WatchRouletteContent() {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<string>('');
-  const [doublePointsActive, setDoublePointsActive] = useState(false);
-  const [friendLifelineActive, setFriendLifelineActive] = useState(false);
-  const [superpowerTimer, setSuperpowerTimer] = useState(15);
 
   useEffect(() => {
     if (!roomLoading && !room) {
@@ -57,16 +53,8 @@ function WatchRouletteContent() {
         setDifficulty(payload.payload?.difficulty);
         setPhase('difficulty-revealed');
         setTimeout(() => {
-          setPhase('superpower-window');
-          setSuperpowerTimer(15);
+          setPhase('question-revealed');
         }, 2000);
-      })
-      .on('broadcast', { event: 'superpower_activated' }, (payload: any) => {
-        if (payload.payload?.type === 'double_points') {
-          setDoublePointsActive(true);
-        } else if (payload.payload?.type === 'friend_lifeline') {
-          setFriendLifelineActive(true);
-        }
       })
       .on('broadcast', { event: 'name_result' }, (payload: any) => {
         const player = players.find(p => p.id === payload.payload?.playerId);
@@ -82,22 +70,6 @@ function WatchRouletteContent() {
     };
   }, [room, players]);
 
-  useEffect(() => {
-    if (phase === 'superpower-window' && superpowerTimer > 0) {
-      const interval = setInterval(() => {
-        setSuperpowerTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            setPhase('question-revealed');
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [phase, superpowerTimer]);
 
   if (roomLoading || !room) {
     return (
@@ -270,36 +242,6 @@ function WatchRouletteContent() {
           </motion.div>
         )}
 
-        {/* Superpower Window */}
-        {phase === 'superpower-window' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center space-y-8"
-          >
-            <h2 className="text-4xl font-black text-black uppercase">janela dos superpoderes ⚡</h2>
-            <div className="text-9xl font-black text-black">{superpowerTimer}s</div>
-
-            <div className="grid grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <div className={`brutal-card p-8 ${friendLifelineActive ? 'bg-black' : 'opacity-50'}`}>
-                <div className="text-5xl mb-4">🔵</div>
-                <p className={`text-2xl font-black uppercase ${friendLifelineActive ? 'text-white' : 'text-black'}`}>
-                  🔵 Checar com Amigos
-                </p>
-                {friendLifelineActive && <p className="text-lg font-bold text-yellow-400 mt-2">ATIVO 🔥</p>}
-              </div>
-
-              <div className={`brutal-card p-8 ${doublePointsActive ? 'bg-black' : 'opacity-50'}`}>
-                <div className="text-5xl mb-4">🟡</div>
-                <p className={`text-2xl font-black uppercase ${doublePointsActive ? 'text-white' : 'text-black'}`}>
-                  🟡 Double Points
-                </p>
-                {doublePointsActive && <p className="text-lg font-bold text-yellow-400 mt-2">ATIVO 🔥</p>}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
         {/* Question Revealed */}
         {phase === 'question-revealed' && (
           <motion.div
@@ -307,12 +249,6 @@ function WatchRouletteContent() {
             animate={{ opacity: 1 }}
             className="space-y-8"
           >
-            {doublePointsActive && (
-              <div className="brutal-border bg-black text-white p-6 rounded-xl text-center">
-                <p className="text-4xl font-black uppercase">⚡ DOUBLE POINTS ATIVADO</p>
-              </div>
-            )}
-
             <div className="brutal-card p-10">
               <h2 className="text-4xl font-black text-black mb-6 uppercase">pergunta:</h2>
               <p className="text-4xl font-bold text-black leading-tight">{currentQuestion}</p>

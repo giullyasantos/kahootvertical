@@ -16,7 +16,6 @@ type RoulettePhase =
   | 'name-roulette'
   | 'waiting-difficulty'
   | 'difficulty-revealed'
-  | 'superpower-window'
   | 'question-revealed'
   | 'final-results';
 
@@ -34,9 +33,6 @@ function HostRouletteContent() {
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<string>('');
   const [spinning, setSpinning] = useState(false);
-  const [doublePointsActive, setDoublePointsActive] = useState(false);
-  const [friendLifelineActive, setFriendLifelineActive] = useState(false);
-  const [superpowerTimer, setSuperpowerTimer] = useState(15);
 
   useEffect(() => {
     if (!roomLoading && !room) {
@@ -54,16 +50,8 @@ function HostRouletteContent() {
         setDifficulty(payload.payload?.difficulty);
         setPhase('difficulty-revealed');
         setTimeout(() => {
-          setPhase('superpower-window');
-          setSuperpowerTimer(15);
+          revealQuestion();
         }, 2000);
-      })
-      .on('broadcast', { event: 'superpower_activated' }, (payload: any) => {
-        if (payload.payload?.type === 'double_points') {
-          setDoublePointsActive(true);
-        } else if (payload.payload?.type === 'friend_lifeline') {
-          setFriendLifelineActive(true);
-        }
       })
       .subscribe();
 
@@ -72,22 +60,6 @@ function HostRouletteContent() {
     };
   }, [room]);
 
-  useEffect(() => {
-    if (phase === 'superpower-window' && superpowerTimer > 0) {
-      const interval = setInterval(() => {
-        setSuperpowerTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            revealQuestion();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [phase, superpowerTimer]);
 
   const availablePlayers = players.filter((p) => !p.has_played_roulette);
   const currentTeam = teams[currentTeamIndex % teams.length];
@@ -149,12 +121,11 @@ function HostRouletteContent() {
     if (!selectedPlayer || !room) return;
 
     const supabase = createClient();
-    const finalPoints = doublePointsActive ? points * 2 : points;
 
     await supabase
       .from('players')
       .update({
-        score: selectedPlayer.score + finalPoints,
+        score: selectedPlayer.score + points,
         has_played_roulette: true,
       })
       .eq('id', selectedPlayer.id);
@@ -169,7 +140,7 @@ function HostRouletteContent() {
       if (team) {
         await supabase
           .from('teams')
-          .update({ score: team.score + finalPoints })
+          .update({ score: team.score + points })
           .eq('id', selectedPlayer.team_id);
       }
     }
@@ -179,8 +150,6 @@ function HostRouletteContent() {
     setSelectedPlayer(null);
     setDifficulty(null);
     setCurrentQuestion('');
-    setDoublePointsActive(false);
-    setFriendLifelineActive(false);
   }
 
 
@@ -362,36 +331,6 @@ function HostRouletteContent() {
           </motion.div>
         )}
 
-        {/* Superpower Window */}
-        {phase === 'superpower-window' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center space-y-8"
-          >
-            <h2 className="text-4xl font-black text-black uppercase">janela dos superpoderes ⚡</h2>
-            <div className="text-9xl font-black text-black">{superpowerTimer}s</div>
-
-            <div className="grid grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <div className={`brutal-card p-8 ${friendLifelineActive ? 'bg-black' : 'opacity-50'}`}>
-                <div className="text-5xl mb-4">🔵</div>
-                <p className={`text-2xl font-black uppercase ${friendLifelineActive ? 'text-white' : 'text-black'}`}>
-                  🔵 Checar com Amigos
-                </p>
-                {friendLifelineActive && <p className="text-lg font-bold text-yellow-400 mt-2">ATIVO 🔥</p>}
-              </div>
-
-              <div className={`brutal-card p-8 ${doublePointsActive ? 'bg-black' : 'opacity-50'}`}>
-                <div className="text-5xl mb-4">🟡</div>
-                <p className={`text-2xl font-black uppercase ${doublePointsActive ? 'text-white' : 'text-black'}`}>
-                  🟡 Double Points
-                </p>
-                {doublePointsActive && <p className="text-lg font-bold text-yellow-400 mt-2">ATIVO 🔥</p>}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
         {/* Question Revealed */}
         {phase === 'question-revealed' && (
           <motion.div
@@ -399,12 +338,6 @@ function HostRouletteContent() {
             animate={{ opacity: 1 }}
             className="space-y-8"
           >
-            {doublePointsActive && (
-              <div className="brutal-border bg-black text-white p-6 rounded-xl text-center">
-                <p className="text-4xl font-black uppercase">⚡ DOUBLE POINTS ATIVADO</p>
-              </div>
-            )}
-
             <div className="brutal-card p-10">
               <h2 className="text-4xl font-black text-black mb-6 uppercase">pergunta:</h2>
               <p className="text-4xl font-bold text-black leading-tight">{currentQuestion}</p>
@@ -426,7 +359,7 @@ function HostRouletteContent() {
                 onClick={() => awardPoints(500)}
                 className="brutal-btn flex-1 bg-[#F7D043] text-black font-black py-8 rounded-xl text-3xl uppercase"
               >
-                {doublePointsActive ? '1000' : '500'} pts
+                500 pts
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -434,7 +367,7 @@ function HostRouletteContent() {
                 onClick={() => awardPoints(1000)}
                 className="brutal-btn flex-1 bg-black text-white font-black py-8 rounded-xl text-3xl uppercase"
               >
-                {doublePointsActive ? '2000' : '1000'} pts
+                1000 pts
               </motion.button>
             </div>
           </motion.div>
