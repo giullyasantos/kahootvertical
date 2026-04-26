@@ -126,14 +126,19 @@ function PlayRouletteContent() {
 
     setSpinning(true);
 
+    // Pick a random final index (will land on this after animation)
+    const finalIndex = Math.floor(Math.random() * 3);
+    const totalIterations = 20;
+
     let iterations = 0;
     const interval = setInterval(() => {
-      setCurrentDifficultyIndex((prev) => (prev + 1) % 3);
       iterations++;
 
-      if (iterations >= 20) {
+      if (iterations >= totalIterations) {
         clearInterval(interval);
-        const finalDifficulty = difficulties[Math.floor(Math.random() * 3)];
+        // Set to the final index we chose
+        setCurrentDifficultyIndex(finalIndex);
+        const finalDifficulty = difficulties[finalIndex];
         setSelectedDifficulty(finalDifficulty);
         setSpinning(false);
 
@@ -150,6 +155,9 @@ function PlayRouletteContent() {
             }
           });
         }
+      } else {
+        // Keep spinning through indices
+        setCurrentDifficultyIndex((prev) => (prev + 1) % 3);
       }
     }, 100);
   }
