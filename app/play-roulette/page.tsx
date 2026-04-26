@@ -65,6 +65,12 @@ function PlayRouletteContent() {
   useEffect(() => {
     if (!room) return;
 
+    // If roulette phase ended, redirect to main play page to see final results
+    if (room.phase === 'finished') {
+      router.push(`/play?code=${code}&playerId=${playerId}`);
+      return;
+    }
+
     if (room.phase !== 'onthespot') {
       router.push(`/play?code=${code}&playerId=${playerId}`);
       return;

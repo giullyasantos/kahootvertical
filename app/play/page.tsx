@@ -75,8 +75,11 @@ function PlayContent() {
   const currentTeam = teams.find((t) => t.id === currentPlayer?.team_id);
   const currentQuestionIndex = room?.current_question_index || 0;
   const currentQuestion = questions[currentQuestionIndex];
-  const playerRank =
-    players.findIndex((p) => p.id === playerId) + 1 || players.length;
+
+  // Calculate team rank based on scores
+  const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+  const teamRank = currentTeam ? sortedTeams.findIndex((t) => t.id === currentTeam.id) + 1 : 0;
+  const isWinningTeam = teamRank === 1;
 
   useEffect(() => {
     if (!playerId || !code) {
@@ -360,8 +363,8 @@ function PlayContent() {
             >
               <div className="flex justify-center">
                 <Image
-                  src={playerRank === 1 ? winnerGif : loserGif}
-                  alt={playerRank === 1 ? 'Winner' : 'Loser'}
+                  src={isWinningTeam ? winnerGif : loserGif}
+                  alt={isWinningTeam ? 'Winner' : 'Loser'}
                   width={300}
                   height={300}
                   className="rounded-2xl"
@@ -369,7 +372,11 @@ function PlayContent() {
                 />
               </div>
               <h2 className="text-5xl font-black text-black uppercase">
-                {playerRank === 1 ? 'PIZZA SEM PAGAR BB 🍕👑' : playerRank === 2 ? 'quase... ainda come pizza mas paga 😭' : playerRank === 3 ? '3º lugar... paga a pizza igual 💀' : 'paga a pizza igual 💀'}
+                {isWinningTeam
+                  ? 'PIZZA SEM PAGAR BB 🍕👑'
+                  : teamRank === 2
+                    ? 'quase... ainda come pizza mas paga 😭'
+                    : 'paga a pizza 💀'}
               </h2>
 
               <div className="brutal-card p-10">
@@ -378,16 +385,16 @@ function PlayContent() {
                   {currentTeam.name}
                 </p>
                 <p className="text-xl font-bold text-black/70 uppercase mb-3">
-                  pontuação final
+                  pontuação final do time
                 </p>
                 <p className="text-7xl font-black text-black mb-4">
-                  {currentPlayer.score}
+                  {currentTeam.score}
                 </p>
                 <p className="text-3xl font-black text-black">
-                  {playerRank === 1 && '🥇 campeão!'}
-                  {playerRank === 2 && '🥈 2º lugar!'}
-                  {playerRank === 3 && '🥉 3º lugar!'}
-                  {playerRank > 3 && `${playerRank}º lugar`}
+                  {teamRank === 1 && '🥇 TIME CAMPEÃO!'}
+                  {teamRank === 2 && '🥈 2º lugar'}
+                  {teamRank === 3 && '🥉 3º lugar'}
+                  {teamRank > 3 && `${teamRank}º lugar`}
                 </p>
               </div>
 

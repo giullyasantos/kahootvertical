@@ -79,6 +79,14 @@ function HostRouletteContent() {
   async function spinNameRoulette() {
     if (teamPlayers.length === 0) {
       if (availablePlayers.length === 0) {
+        // Everyone has played - mark room as finished
+        if (room) {
+          const supabase = createClient();
+          await supabase
+            .from('rooms')
+            .update({ phase: 'finished' })
+            .eq('id', room.id);
+        }
         setPhase('final-results');
         return;
       }
