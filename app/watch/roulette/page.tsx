@@ -9,6 +9,7 @@ import { useRealtimeRoom } from '@/hooks/useRealtimeRoom';
 import { useRealtimePlayers } from '@/hooks/useRealtimePlayers';
 import { useRealtimeTeams } from '@/hooks/useRealtimeTeams';
 import { Player, Difficulty } from '@/types';
+import { rouletteQuestions } from '@/lib/questions';
 import logo from '@/app/images/verticallogo.png';
 
 type RoulettePhase =
@@ -39,10 +40,19 @@ function WatchRouletteContent() {
   }, [room, roomLoading, router]);
 
   useEffect(() => {
-    if (room?.phase !== 'onthespot') {
+    if (!room) return;
+
+    // If roulette ended, show final results
+    if (room.phase === 'finished') {
+      setPhase('final-results');
+      return;
+    }
+
+    // If not in roulette phase, redirect
+    if (room.phase !== 'onthespot') {
       router.push(`/watch/game?code=${code}`);
     }
-  }, [room?.phase, router, code]);
+  }, [room, router, code]);
 
   useEffect(() => {
     if (!room) return;
@@ -50,13 +60,13 @@ function WatchRouletteContent() {
     const supabase = createClient();
     const channel = supabase.channel(`roulette:${room.id}`)
       .on('broadcast', { event: 'difficulty_result' }, (payload: any) => {
-        setDifficulty(payload.payload?.difficulty);
+        console.log('Watcher received difficulty:', payload);
+        const diff = payload.payload?.difficulty;
+        setDifficulty(diff);
         setPhase('difficulty-revealed');
-        setTimeout(() => {
-          setPhase('question-revealed');
-        }, 2000);
       })
       .on('broadcast', { event: 'name_result' }, (payload: any) => {
+        console.log('Watcher received name_result:', payload);
         const player = players.find(p => p.id === payload.payload?.playerId);
         if (player) {
           setSelectedPlayer(player);
@@ -69,6 +79,21 @@ function WatchRouletteContent() {
       supabase.removeChannel(channel);
     };
   }, [room, players]);
+
+  // Auto-reveal question after difficulty is shown (matching host logic)
+  useEffect(() => {
+    if (phase === 'difficulty-revealed' && difficulty) {
+      console.log('Watcher revealing question for difficulty:', difficulty);
+      const timer = setTimeout(() => {
+        const questions = rouletteQuestions[difficulty];
+        const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+        setCurrentQuestion(randomQuestion);
+        setPhase('question-revealed');
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [phase, difficulty]);
 
 
   if (roomLoading || !room) {
