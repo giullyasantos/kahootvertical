@@ -11,7 +11,7 @@ import { useRealtimePlayers } from '@/hooks/useRealtimePlayers';
 import { useRealtimeTeams } from '@/hooks/useRealtimeTeams';
 import { questions } from '@/lib/questions';
 import { calculateScore } from '@/lib/utils';
-import { AnswerColor } from '@/types';
+import { AnswerColor, BroadcastPayload } from '@/types';
 import winnerGif from '@/app/images/winner.gif';
 import loserGif from '@/app/images/loser.gif';
 import logo from '@/app/images/verticallogo.png';
@@ -120,39 +120,18 @@ function PlayContent() {
     const supabase = createClient();
     const channel = supabase
       .channel(`game:${room.id}`)
-      .on('broadcast', { event: 'time_up' }, (payload: any) => {
+      .on('broadcast', { event: 'time_up' }, (payload: BroadcastPayload<{ questionIndex?: number }>) => {
         if (payload.payload?.questionIndex === currentQuestionIndex) {
           setTimeIsUp(true);
         }
       })
-      .on('broadcast', { event: 'reveal_answer' }, async (payload: any) => {
+      .on('broadcast', { event: 'reveal_answer' }, async (payload: BroadcastPayload<{ questionIndex?: number }>) => {
         if (payload.payload?.questionIndex === currentQuestionIndex) {
           // Only show result if player answered
           if (lastAnswerResult && gameState === 'answered') {
             setGameState('result');
 
-            // Update player score
-            if (lastAnswerResult.isCorrect && currentPlayer) {
-              await supabase
-                .from('players')
-                .update({ score: currentPlayer.score + lastAnswerResult.points })
-                .eq('id', currentPlayer.id);
-
-              if (currentPlayer.team_id) {
-                const { data: team } = await supabase
-                  .from('teams')
-                  .select('score')
-                  .eq('id', currentPlayer.team_id)
-                  .single();
-
-                if (team) {
-                  await supabase
-                    .from('teams')
-                    .update({ score: team.score + lastAnswerResult.points })
-                    .eq('id', currentPlayer.team_id);
-                }
-              }
-
+            if (lastAnswerResult.isCorrect) {
               // Fire confetti for correct answer
               confetti({
                 particleCount: 100,
@@ -168,7 +147,7 @@ function PlayContent() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [room, currentQuestionIndex, lastAnswerResult, currentPlayer]);
+  }, [room, currentQuestionIndex, lastAnswerResult, gameState]);
 
   async function handleAnswer(answerIndex: number) {
     if (!room || !currentPlayer || gameState !== 'playing' || timeIsUp) return;
@@ -187,14 +166,18 @@ function PlayContent() {
       const randomMessage = messages[Math.floor(Math.random() * messages.length)];
       setResultMessage(randomMessage);
 
-      await supabase.from('answers').insert({
-        room_id: room.id,
-        player_id: currentPlayer.id,
-        question_index: currentQuestionIndex,
-        answer_index: answerIndex,
-        is_correct: isCorrect,
-        points_earned: points,
+      const { error: answerError } = await supabase.rpc('submit_answer', {
+        p_room_id: room.id,
+        p_player_id: currentPlayer.id,
+        p_question_index: currentQuestionIndex,
+        p_answer_index: answerIndex,
+        p_is_correct: isCorrect,
+        p_points_earned: points,
       });
+
+      if (answerError) {
+        throw answerError;
+      }
 
       // Store result but don't show it yet
       setLastAnswerResult({ isCorrect, points });

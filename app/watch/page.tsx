@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase';
@@ -102,9 +103,9 @@ export default function WatchPage() {
           </form>
 
           <div className="pt-6 text-center">
-            <a href="/" className="text-black font-bold text-xl hover:underline uppercase">
+            <Link href="/" className="text-black font-bold text-xl hover:underline uppercase">
               ← voltar
-            </a>
+            </Link>
           </div>
         </div>
       </motion.div>

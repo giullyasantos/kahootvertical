@@ -18,7 +18,6 @@ function HostLobbyContent() {
   const { players } = useRealtimePlayers(room?.id || null);
   const { teams } = useRealtimeTeams(room?.id || null);
   const [starting, setStarting] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [removingPlayer, setRemovingPlayer] = useState<string | null>(null);
 
   useEffect(() => {
@@ -125,14 +124,6 @@ function HostLobbyContent() {
       console.error('Caught error removing player:', err);
       alert('Erro ao remover jogador: ' + String(err));
       setRemovingPlayer(null);
-    }
-  }
-
-  function copyCode() {
-    if (code) {
-      navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   }
 

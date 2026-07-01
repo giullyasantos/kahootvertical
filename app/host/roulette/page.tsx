@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase';
 import { useRealtimeRoom } from '@/hooks/useRealtimeRoom';
 import { useRealtimePlayers } from '@/hooks/useRealtimePlayers';
 import { useRealtimeTeams } from '@/hooks/useRealtimeTeams';
-import { Player, Difficulty } from '@/types';
+import { BroadcastPayload, Player, Difficulty } from '@/types';
 import { rouletteQuestions } from '@/lib/questions';
 import logo from '@/app/images/verticallogo.png';
 
@@ -45,9 +45,8 @@ function HostRouletteContent() {
 
     const supabase = createClient();
     const channel = supabase.channel(`roulette:${room.id}`)
-      .on('broadcast', { event: 'difficulty_result' }, (payload: any) => {
-        console.log('Host received difficulty:', payload);
-        setDifficulty(payload.payload?.difficulty);
+      .on('broadcast', { event: 'difficulty_result' }, (payload: BroadcastPayload<{ difficulty?: Difficulty }>) => {
+        setDifficulty(payload.payload?.difficulty ?? null);
         setPhase('difficulty-revealed');
       })
       .subscribe();

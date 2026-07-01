@@ -10,7 +10,7 @@ import { useRealtimePlayers } from '@/hooks/useRealtimePlayers';
 import { useRealtimeAnswers } from '@/hooks/useRealtimeAnswers';
 import { useRealtimeTeams } from '@/hooks/useRealtimeTeams';
 import { questions } from '@/lib/questions';
-import { AnswerColor } from '@/types';
+import { AnswerColor, BroadcastPayload } from '@/types';
 import logo from '@/app/images/verticallogo.png';
 
 type ViewMode = 'question' | 'reveal' | 'scoreboard';
@@ -67,17 +67,17 @@ function WatchGameContent() {
     const supabase = createClient();
     const channel = supabase
       .channel(`game:${room.id}`)
-      .on('broadcast', { event: 'reveal_answer' }, (payload: any) => {
+      .on('broadcast', { event: 'reveal_answer' }, (payload: BroadcastPayload<{ questionIndex?: number }>) => {
         if (payload.payload?.questionIndex === currentQuestionIndex) {
           setViewMode('reveal');
         }
       })
-      .on('broadcast', { event: 'show_scoreboard' }, (payload: any) => {
+      .on('broadcast', { event: 'show_scoreboard' }, (payload: BroadcastPayload<{ questionIndex?: number }>) => {
         if (payload.payload?.questionIndex === currentQuestionIndex) {
           setViewMode('scoreboard');
         }
       })
-      .on('broadcast', { event: 'time_up' }, (payload: any) => {
+      .on('broadcast', { event: 'time_up' }, (payload: BroadcastPayload<{ questionIndex?: number }>) => {
         if (payload.payload?.questionIndex === currentQuestionIndex) {
           setTimeLeft(0);
         }
@@ -126,8 +126,6 @@ function WatchGameContent() {
     (index) => answers.filter((a) => a.answer_index === index).length
   );
   const maxAnswers = Math.max(...answerDistribution, 1);
-  const isLastQuestion = currentQuestionIndex >= questions.length - 1;
-
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col p-6 md:p-8 relative">
       <div className="absolute top-4 left-4 opacity-50 z-10">

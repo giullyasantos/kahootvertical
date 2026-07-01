@@ -33,7 +33,7 @@ export function useRealtimeRoom(roomCode: string | null) {
 
         setRoom(data);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Failed to fetch room');
         setLoading(false);
       }

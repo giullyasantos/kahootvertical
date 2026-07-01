@@ -16,10 +16,17 @@
 
 1. No dashboard do Supabase, clique em **SQL Editor** (ícone de código no menu lateral)
 2. Clique em **New query**
-3. Copie TODO o conteúdo do arquivo `supabase/migrations/001_initial_schema.sql`
-4. Cole no editor SQL
+3. Execute todos os arquivos em `supabase/migrations/`, em ordem numérica
+4. Cole cada migration no editor SQL
 5. Clique em **RUN** (ou pressione Ctrl/Cmd + Enter)
-6. Você deve ver a mensagem "Success. No rows returned"
+6. Você deve ver a mensagem "Success. No rows returned" após cada arquivo
+
+### 2.1 Configurar Google OAuth
+
+1. No dashboard do Supabase, abra **Authentication** → **Providers**
+2. Ative **Google**
+3. Configure o Client ID e Client Secret do Google
+4. Adicione as URLs de callback para local e produção
 
 ### 3. Copiar as Credenciais
 

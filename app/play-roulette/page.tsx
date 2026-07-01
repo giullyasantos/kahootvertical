@@ -8,8 +8,7 @@ import { createClient } from '@/lib/supabase';
 import { useRealtimeRoom } from '@/hooks/useRealtimeRoom';
 import { useRealtimePlayers } from '@/hooks/useRealtimePlayers';
 import { useRealtimeTeams } from '@/hooks/useRealtimeTeams';
-import { Player, Difficulty } from '@/types';
-import { getQuestionsByDifficulty } from '@/lib/questions';
+import { BroadcastPayload, Difficulty } from '@/types';
 import logo from '@/app/images/verticallogo.png';
 
 type RoulettePhase =
@@ -43,12 +42,10 @@ function PlayRouletteContent() {
   const [phase, setPhase] = useState<RoulettePhase>('waiting');
   const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
 
   const currentPlayer = players.find((p) => p.id === playerId);
   const currentTeam = teams.find((t) => t.id === currentPlayer?.team_id);
-  const isCaptain = currentPlayer?.id === currentTeam?.captain_id;
 
   useEffect(() => {
     if (!playerId || !code) {
@@ -88,7 +85,7 @@ function PlayRouletteContent() {
     const supabase = createClient();
     const channel = supabase
       .channel(`roulette:${room.id}`)
-      .on('broadcast', { event: 'name_result' }, (payload: any) => {
+      .on('broadcast', { event: 'name_result' }, (payload: BroadcastPayload<{ playerId?: string }>) => {
         if (payload.payload?.playerId === currentPlayer?.id) {
           // It's MY turn
           setIsMyTurn(true);
@@ -102,9 +99,8 @@ function PlayRouletteContent() {
           setPhase('waiting');
         }
       })
-      .on('broadcast', { event: 'difficulty_result' }, (payload: any) => {
+      .on('broadcast', { event: 'difficulty_result' }, (payload: BroadcastPayload<{ difficulty?: Difficulty }>) => {
         if (payload.payload?.difficulty) {
-          setSelectedDifficulty(payload.payload.difficulty);
           // Only show question if it's MY turn
           if (isMyTurn) {
             setTimeout(() => {
@@ -118,7 +114,7 @@ function PlayRouletteContent() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [room, currentPlayer]);
+  }, [room, currentPlayer, isMyTurn]);
 
 
   async function spinDifficulty() {
@@ -139,7 +135,6 @@ function PlayRouletteContent() {
         // Set to the final index we chose
         setCurrentDifficultyIndex(finalIndex);
         const finalDifficulty = difficulties[finalIndex];
-        setSelectedDifficulty(finalDifficulty);
         setSpinning(false);
 
         if (room) {

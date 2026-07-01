@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase';
 import { useRealtimeRoom } from '@/hooks/useRealtimeRoom';
 import { useRealtimePlayers } from '@/hooks/useRealtimePlayers';
 import { useRealtimeTeams } from '@/hooks/useRealtimeTeams';
-import { Player, Difficulty } from '@/types';
+import { BroadcastPayload, Player, Difficulty } from '@/types';
 import { rouletteQuestions } from '@/lib/questions';
 import logo from '@/app/images/verticallogo.png';
 
@@ -28,7 +28,7 @@ function WatchRouletteContent() {
   const { teams } = useRealtimeTeams(room?.id || null);
 
   const [phase, setPhase] = useState<RoulettePhase>('name-roulette');
-  const [currentTeamIndex, setCurrentTeamIndex] = useState(0);
+  const [currentTeamIndex] = useState(0);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<string>('');
@@ -59,14 +59,12 @@ function WatchRouletteContent() {
 
     const supabase = createClient();
     const channel = supabase.channel(`roulette:${room.id}`)
-      .on('broadcast', { event: 'difficulty_result' }, (payload: any) => {
-        console.log('Watcher received difficulty:', payload);
-        const diff = payload.payload?.difficulty;
+      .on('broadcast', { event: 'difficulty_result' }, (payload: BroadcastPayload<{ difficulty?: Difficulty }>) => {
+        const diff = payload.payload?.difficulty ?? null;
         setDifficulty(diff);
         setPhase('difficulty-revealed');
       })
-      .on('broadcast', { event: 'name_result' }, (payload: any) => {
-        console.log('Watcher received name_result:', payload);
+      .on('broadcast', { event: 'name_result' }, (payload: BroadcastPayload<{ playerId?: string }>) => {
         const player = players.find(p => p.id === payload.payload?.playerId);
         if (player) {
           setSelectedPlayer(player);
@@ -83,7 +81,6 @@ function WatchRouletteContent() {
   // Auto-reveal question after difficulty is shown (matching host logic)
   useEffect(() => {
     if (phase === 'difficulty-revealed' && difficulty) {
-      console.log('Watcher revealing question for difficulty:', difficulty);
       const timer = setTimeout(() => {
         const questions = rouletteQuestions[difficulty];
         const randomQuestion = questions[Math.floor(Math.random() * questions.length)];

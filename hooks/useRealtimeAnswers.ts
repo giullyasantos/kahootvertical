@@ -33,7 +33,7 @@ export function useRealtimeAnswers(roomId: string | null, questionIndex: number)
 
         setAnswers(data || []);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Failed to fetch answers');
         setLoading(false);
       }

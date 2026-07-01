@@ -54,8 +54,9 @@ npm install
 ### 2. Configurar Supabase
 
 1. Crie um projeto no [Supabase](https://supabase.com)
-2. Execute a migration em `supabase/migrations/001_initial_schema.sql` no SQL Editor
+2. Execute todas as migrations em `supabase/migrations/` no SQL Editor, em ordem numérica
 3. Copie as credenciais do projeto
+4. Ative Google OAuth em Authentication → Providers no Supabase
 
 ### 3. Configurar variáveis de ambiente
 
@@ -69,6 +70,8 @@ Edite `.env.local` com suas credenciais:
 NEXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anon
 ```
+
+Também configure as URLs de callback do Google OAuth no Supabase para o ambiente local e o deploy.
 
 ### 4. Rodar o projeto
 

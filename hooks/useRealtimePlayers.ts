@@ -33,7 +33,7 @@ export function useRealtimePlayers(roomId: string | null) {
 
         setPlayers(data || []);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Failed to fetch players');
         setLoading(false);
       }

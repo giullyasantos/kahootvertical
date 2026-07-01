@@ -7,6 +7,7 @@ export interface Room {
   status: GameStatus;
   current_question_index: number;
   phase: Phase;
+  host_user_id: string | null;
   created_at: string;
 }
 
@@ -16,6 +17,7 @@ export interface Player {
   name: string;
   score: number;
   team_id: string | null;
+  user_id: string | null;
   has_played_roulette: boolean;
   friend_lifeline_used: boolean;
   joined_at: string;
@@ -60,6 +62,10 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 export interface RouletteState {
   type: 'spin_name' | 'name_result' | 'spin_difficulty' | 'difficulty_result' |
         'superpower_activated' | 'question_revealed' | 'timer_start' | 'score_awarded';
-  payload?: any;
+  payload?: unknown;
   timestamp: number;
+}
+
+export interface BroadcastPayload<TPayload extends Record<string, unknown> = Record<string, unknown>> {
+  payload?: TPayload;
 }

@@ -2,11 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase';
 import { useRealtimeTeams } from '@/hooks/useRealtimeTeams';
 import { Room } from '@/types';
+import { AuthGate } from '@/components/AuthGate';
+import { useAuthSession } from '@/hooks/useAuthSession';
 import logo from '@/app/images/verticallogo.png';
 
 const EMOJI_OPTIONS = [
@@ -20,6 +23,7 @@ type Step = 'enter-code' | 'select-team';
 
 export default function JoinPage() {
   const router = useRouter();
+  const { user, loading: authLoading, signInWithGoogle, signOut } = useAuthSession();
   const [step, setStep] = useState<Step>('enter-code');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -105,13 +109,31 @@ export default function JoinPage() {
   }
 
   async function joinTeam(teamId: string, isCaptain: boolean = false) {
-    if (!room) return;
+    if (!room || !user) return;
 
     setLoading(true);
     setError(null);
 
     try {
       const supabase = createClient();
+
+      const { data: existingPlayer, error: existingError } = await supabase
+        .from('players')
+        .select('*')
+        .eq('room_id', room.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingError) {
+        setError('erro ao conferir seu jogador, tenta de novo');
+        setLoading(false);
+        return;
+      }
+
+      if (existingPlayer) {
+        router.push(`/play?code=${code.trim()}&playerId=${existingPlayer.id}`);
+        return;
+      }
 
       const { data: player, error: playerError } = await supabase
         .from('players')
@@ -120,6 +142,7 @@ export default function JoinPage() {
           name: name.trim(),
           score: 0,
           team_id: teamId,
+          user_id: user.id,
         })
         .select()
         .single();
@@ -145,6 +168,17 @@ export default function JoinPage() {
     }
   }
 
+  if (authLoading || !user) {
+    return (
+      <AuthGate
+        title="ENTRAR NO JOGO"
+        subtitle="entra com Google pra evitar resposta duplicada"
+        loading={authLoading}
+        onSignIn={signInWithGoogle}
+      />
+    );
+  }
+
   if (step === 'enter-code') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 md:p-12 relative">
@@ -160,6 +194,9 @@ export default function JoinPage() {
             <div className="text-center space-y-4">
               <h1 className="text-5xl md:text-6xl font-black text-black uppercase">ENTRAR NO JOGO</h1>
               <p className="text-xl md:text-2xl font-bold text-black">coloca o código e o nome, vai</p>
+              <p className="text-sm md:text-base font-bold text-black/70 uppercase">
+                logado como {user.email}
+              </p>
             </div>
 
             <AnimatePresence>
@@ -213,9 +250,18 @@ export default function JoinPage() {
             </form>
 
             <div className="pt-6 text-center">
-              <a href="/" className="text-black font-bold text-xl hover:underline uppercase">
-                ← voltar
-              </a>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link href="/" className="text-black font-bold text-xl hover:underline uppercase">
+                  ← voltar
+                </Link>
+                <button
+                  type="button"
+                  onClick={signOut}
+                  className="text-black/70 font-bold text-base hover:underline uppercase"
+                >
+                  sair
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>

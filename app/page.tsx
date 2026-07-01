@@ -30,7 +30,7 @@ export default function Home() {
             transition={{ duration: 0.4, delay: 0.2 }}
             style={{ textShadow: '6px 6px 0px rgba(0,0,0,0.15)' }}
           >
-            VERTICAL'S
+            VERTICAL&apos;S
             <br />
             KAHOOT
           </motion.h1>

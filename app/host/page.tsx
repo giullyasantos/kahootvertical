@@ -2,18 +2,24 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase';
 import { generateRoomCode } from '@/lib/utils';
+import { AuthGate } from '@/components/AuthGate';
+import { useAuthSession } from '@/hooks/useAuthSession';
 import logo from '@/app/images/verticallogo.png';
 
 export default function HostPage() {
   const router = useRouter();
+  const { user, loading: authLoading, signInWithGoogle, signOut } = useAuthSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function createRoom() {
+    if (!user) return;
+
     setLoading(true);
     setError(null);
 
@@ -21,15 +27,14 @@ export default function HostPage() {
       const supabase = createClient();
       const code = generateRoomCode();
 
-      const { data, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('rooms')
         .insert({
           code,
           status: 'waiting',
           current_question_index: 0,
-        })
-        .select()
-        .single();
+          host_user_id: user.id,
+        });
 
       if (insertError) {
         throw insertError;
@@ -41,6 +46,17 @@ export default function HostPage() {
       setError('erro ao criar sala, tenta de novo');
       setLoading(false);
     }
+  }
+
+  if (authLoading || !user) {
+    return (
+      <AuthGate
+        title="AREA DO HOST"
+        subtitle="entra com Google pra criar e controlar uma sala"
+        loading={authLoading}
+        onSignIn={signInWithGoogle}
+      />
+    );
   }
 
   return (
@@ -58,6 +74,9 @@ export default function HostPage() {
             <h1 className="text-6xl md:text-7xl font-black text-black uppercase">ÁREA DO CHEFE</h1>
             <p className="text-2xl md:text-3xl font-bold text-black">
               cria a sala e manda ver
+            </p>
+            <p className="text-sm md:text-base font-bold text-black/70 uppercase">
+              logado como {user.email}
             </p>
           </div>
 
@@ -82,9 +101,18 @@ export default function HostPage() {
           </motion.button>
 
           <div className="pt-6 text-center">
-            <a href="/" className="text-black font-bold text-xl hover:underline uppercase">
-              ← voltar
-            </a>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/" className="text-black font-bold text-xl hover:underline uppercase">
+                ← voltar
+              </Link>
+              <button
+                type="button"
+                onClick={signOut}
+                className="text-black/70 font-bold text-base hover:underline uppercase"
+              >
+                sair
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>

@@ -39,7 +39,6 @@ function HostGameContent() {
     currentQuestionIndex
   );
   const [viewMode, setViewMode] = useState<ViewMode>('question');
-  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const [timeLeft, setTimeLeft] = useState(60);
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -102,7 +101,6 @@ function HostGameContent() {
         .eq('id', room.id);
 
       setViewMode('question');
-      setQuestionStartTime(Date.now());
       setTimeLeft(60);
     }
   }

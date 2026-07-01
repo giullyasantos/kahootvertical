@@ -33,7 +33,7 @@ export function useRealtimeTeams(roomId: string | null) {
 
         setTeams(data || []);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Failed to fetch teams');
         setLoading(false);
       }
