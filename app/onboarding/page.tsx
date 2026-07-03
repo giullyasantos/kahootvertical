@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
+import { getSession, saveSession } from '@/lib/session';
 
 const CAMP_EVENT_ID = process.env.NEXT_PUBLIC_CAMP_EVENT_ID ?? '';
 
@@ -149,6 +150,28 @@ export default function OnboardingPage() {
 
   const phoneRef = useRef<HTMLInputElement>(null);
 
+  // If already has a session, skip to the right step
+  useEffect(() => {
+    const session = getSession();
+    if (session?.onboardingComplete) {
+      router.replace(session.lastPath || '/app');
+      return;
+    }
+    if (session?.registrationId && !session.selectedAvatarId) {
+      setRegistrationId(session.registrationId);
+      setParticipantName(session.firstName);
+      setStep('avatar');
+      return;
+    }
+    if (session?.registrationId && session.selectedAvatarId) {
+      setRegistrationId(session.registrationId);
+      setParticipantName(session.firstName);
+      setSelectedAvatar(session.selectedAvatarId);
+      setStep('notify');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (step === 'phone') phoneRef.current?.focus();
   }, [step]);
@@ -189,7 +212,14 @@ export default function OnboardingPage() {
       }
 
       setRegistrationId(match.id);
-      setParticipantName(match.full_name.split(' ')[0]);
+      const firstName = match.full_name.split(' ')[0];
+      setParticipantName(firstName);
+      saveSession({
+        registrationId: match.id,
+        fullName: match.full_name,
+        firstName,
+        onboardingComplete: false,
+      });
       setStep('avatar');
     } catch {
       setPhoneError('Erro ao buscar inscrição. Tenta de novo.');
@@ -201,8 +231,7 @@ export default function OnboardingPage() {
   // ── Step 2: Avatar pick ─────────────────────────────────────────────────────
   async function handleAvatarConfirm() {
     if (!selectedAvatar) return;
-    // In future: save selected_avatar_url to participants table
-    // For now just advance
+    saveSession({ selectedAvatarId: selectedAvatar });
     setStep('notify');
   }
 
@@ -217,6 +246,7 @@ export default function OnboardingPage() {
   }
 
   function finishOnboarding() {
+    saveSession({ onboardingComplete: true, lastPath: '/app' });
     router.push('/app');
   }
 

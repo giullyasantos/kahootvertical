@@ -11,6 +11,15 @@ const bricolage = Bricolage_Grotesque({
 export const metadata: Metadata = {
   title: "DESPERTA! Acampadentro",
   description: "App do Acampadentro 2026 para participantes, capitaes, admins e telao.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "DESPERTA!",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
