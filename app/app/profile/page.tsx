@@ -1,52 +1,133 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CampShell } from '@/components/camp/CampShell';
-import { StatusCard } from '@/components/camp/StatusCard';
-import { participants } from '@/lib/camp/mockData';
+import { getSession, clearSession } from '@/lib/session';
+import { useRouter } from 'next/navigation';
+
+const PLACEHOLDER_AVATARS = [
+  { id: 'av1', bg: '#FFD200', icon: '🦁' },
+  { id: 'av2', bg: '#123F7A', icon: '🐉' },
+  { id: 'av3', bg: '#0c0c0c', icon: '🦅' },
+];
 
 export default function ProfilePage() {
-  const participant = participants[0];
-  const [selectedAvatar, setSelectedAvatar] = useState('A1');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(participant.notificationEnabled);
+  const router = useRouter();
+  const [firstName, setFirstName] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState('av1');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  useEffect(() => {
+    const session = getSession();
+    if (!session) return;
+    setFirstName(session.firstName || '');
+    setFullName(session.fullName || '');
+    setSelectedAvatar(session.selectedAvatarId || 'av1');
+
+    // Check real notification permission
+    if ('Notification' in window) {
+      setNotificationsEnabled(Notification.permission === 'granted');
+    }
+  }, []);
+
+  function handleSignOut() {
+    clearSession();
+    router.replace('/register');
+  }
 
   return (
-    <CampShell title="Perfil" kicker="Identidade do app" activePath="/app/profile">
-      <section className="grid gap-4 md:grid-cols-3">
-        <StatusCard title="Nome" value={participant.displayName} detail={participant.fullName} />
-        <StatusCard title="Login" value="Telefone" detail="A identidade final sera ligada ao telefone da inscricao, com email como recuperacao." />
-        <StatusCard
-          title="Notificacoes"
-          value={notificationsEnabled ? 'Ativas' : 'Pendente'}
-          detail="Mock local para testar a experiencia antes do push real."
+    <CampShell title="Perfil" kicker="DESPERTA! 2026" activePath="/app/profile">
+      <div className="mx-auto max-w-[420px] space-y-4 px-4 pt-5">
+
+        {/* Identity card */}
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: '#0d1f3c', border: '1px solid rgba(255,255,255,0.1)' }}
         >
-          <button
-            type="button"
-            onClick={() => setNotificationsEnabled((current) => !current)}
-            className="font-black uppercase underline"
-          >
-            {notificationsEnabled ? 'Desativar mock' : 'Ativar mock'}
-          </button>
-        </StatusCard>
-      </section>
-      <section className="rounded-lg border-4 border-black bg-white p-5 shadow-[6px_6px_0_#000]">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-black/55">Avatar escolhido: {selectedAvatar}</p>
-        <h2 className="mt-2 text-3xl font-black uppercase">Escolha entre 3 opcoes</h2>
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
-          {['A1', 'A2', 'A3'].map((label) => (
+          <p className="text-[10px] font-black uppercase tracking-[0.32em] text-[#FFD200]/50">
+            Logado como
+          </p>
+          <h2 className="mt-1 text-3xl font-black uppercase leading-none text-white">
+            {firstName || '—'}
+          </h2>
+          {fullName && (
+            <p className="mt-1 text-sm font-bold text-white/40">{fullName}</p>
+          )}
+        </div>
+
+        {/* Avatar */}
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: '#0d1f3c', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.32em] text-[#FFD200]/50">
+            Seu avatar
+          </p>
+          <div className="flex gap-3">
+            {PLACEHOLDER_AVATARS.map((av) => {
+              const active = selectedAvatar === av.id;
+              return (
+                <div
+                  key={av.id}
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl text-3xl"
+                  style={{
+                    background: av.bg,
+                    border: active ? '3px solid #fff' : '3px solid transparent',
+                    outline: active ? '3px solid #FFD200' : '3px solid transparent',
+                    outlineOffset: 2,
+                    opacity: active ? 1 : 0.35,
+                  }}
+                >
+                  {av.icon}
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-xs font-bold text-white/25">
+            Avatares gerados pela foto chegam em breve.
+          </p>
+        </div>
+
+        {/* Notifications */}
+        <div
+          className="flex items-center justify-between rounded-2xl p-5"
+          style={{ background: '#0d1f3c', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-[#FFD200]/50">
+              Notificações
+            </p>
+            <p className="mt-1 text-base font-black uppercase text-white">
+              {notificationsEnabled ? 'Ativas ✓' : 'Desativadas'}
+            </p>
+          </div>
+          {!notificationsEnabled && (
             <button
               type="button"
-              key={label}
-              onClick={() => setSelectedAvatar(label)}
-              className={`grid aspect-square place-items-center rounded-lg border-4 border-black text-5xl font-black shadow-[4px_4px_0_#000] ${
-                selectedAvatar === label ? 'bg-[#FFD200]' : 'bg-[#FFFDF5]'
-              }`}
+              onClick={async () => {
+                const result = await Notification.requestPermission();
+                setNotificationsEnabled(result === 'granted');
+              }}
+              className="rounded-xl px-4 py-2.5 text-sm font-black uppercase text-black"
+              style={{ background: '#FFD200', border: '2px solid #000' }}
             >
-              {label}
+              Ativar
             </button>
-          ))}
+          )}
         </div>
-      </section>
+
+        {/* Sign out */}
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="w-full rounded-2xl py-4 text-sm font-black uppercase tracking-wide text-white/30 transition active:text-white/60"
+          style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          Sair da conta
+        </button>
+
+      </div>
     </CampShell>
   );
 }
