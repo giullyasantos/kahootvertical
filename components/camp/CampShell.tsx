@@ -35,7 +35,7 @@ export function CampShell({ children, title, kicker, activePath = '/app' }: Camp
       )}
 
       {/* Page content — padded for bottom nav */}
-      <main className="pb-24">
+      <main className="pb-32">
         {children}
       </main>
 
@@ -54,20 +54,20 @@ export function CampShell({ children, title, kicker, activePath = '/app' }: Camp
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex flex-1 select-none flex-col items-center gap-0.5 py-2.5 active:bg-black/5"
+                className="flex flex-1 select-none flex-col items-center gap-1 py-3 active:bg-black/5"
               >
                 <span
-                  className={`text-base leading-none transition-opacity ${
+                  className={`text-2xl leading-none transition-opacity ${
                     active ? 'opacity-100' : 'opacity-30'
                   }`}
                 >
                   {item.icon}
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide transition-all ${
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide transition-all ${
                     active
                       ? 'bg-[#FFD200] text-black'
-                      : 'text-black/35'
+                      : 'text-black/40'
                   }`}
                 >
                   {item.label}
