@@ -717,7 +717,23 @@ export default function RegisterPage() {
             </form>
           </div>
 
-          <footer style={{ textAlign: 'center', fontWeight: 600, fontSize: 13.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', padding: '0 20px 40px', marginTop: 20 }}>
+          {/* Already registered link */}
+          <div style={{ textAlign: 'center', margin: '20px 0 8px' }}>
+            <a
+              href="/onboarding"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.45)',
+                textDecoration: 'none',
+                borderBottom: '1px solid rgba(255,255,255,0.15)',
+                paddingBottom: 2,
+              }}
+            >
+              Já se inscreveu? Entre aqui →
+            </a>
+          </div>
+
+          <footer style={{ textAlign: 'center', fontWeight: 600, fontSize: 13.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', padding: '0 20px 40px', marginTop: 12 }}>
             DESPERTA! · Acampadentro 2026 · 31 jul – 1 ago · dúvidas? fala com a liderança.
           </footer>
         </main>

@@ -221,21 +221,37 @@ export default function OnboardingPage() {
   // If already has a session, skip to the right step
   useEffect(() => {
     const session = getSession();
+
     if (session?.onboardingComplete) {
       router.replace(session.lastPath || '/app');
       return;
     }
-    if (session?.registrationId && !session.selectedAvatarId) {
-      setRegistrationId(session.registrationId);
-      setParticipantName(session.firstName);
-      setStep('avatar');
-      return;
-    }
+
     if (session?.registrationId && session.selectedAvatarId) {
       setRegistrationId(session.registrationId);
       setParticipantName(session.firstName);
       setSelectedAvatar(session.selectedAvatarId);
+
+      // Avatar already chosen — check if notifications already granted
+      const alreadyGranted =
+        typeof Notification !== 'undefined' && Notification.permission === 'granted';
+
+      if (alreadyGranted) {
+        // Nothing left to do — mark complete and go straight to app
+        saveSession({ onboardingComplete: true, lastPath: '/app' });
+        router.replace('/app');
+        return;
+      }
+
+      // Still need to ask for notifications
       setStep('notify');
+      return;
+    }
+
+    if (session?.registrationId && !session.selectedAvatarId) {
+      setRegistrationId(session.registrationId);
+      setParticipantName(session.firstName);
+      setStep('avatar');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
