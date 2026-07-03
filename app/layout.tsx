@@ -9,8 +9,8 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
-  title: "Vertical's Kahoot",
-  description: "o quiz bíblico que vai te deixar sem desculpa",
+  title: "DESPERTA! Acampadentro",
+  description: "App do Acampadentro 2026 para participantes, capitaes, admins e telao.",
 };
 
 export default function RootLayout({

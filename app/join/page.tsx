@@ -170,98 +170,136 @@ export default function JoinPage() {
 
   if (authLoading || !user) {
     return (
-      <AuthGate
-        title="ENTRAR NO JOGO"
-        subtitle="entra com Google pra evitar resposta duplicada"
-        loading={authLoading}
-        onSignIn={signInWithGoogle}
-      />
+      <div className="min-h-screen bg-[#123F7A] flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center">
+            <p className="text-[11px] font-black uppercase tracking-[0.35em] text-[#FFD200]/60">
+              Acampadentro 2026
+            </p>
+            <h1
+              className="font-black uppercase leading-none text-[#FFD200]"
+              style={{ fontSize: 'clamp(3rem, 12vw, 5.5rem)' }}
+            >
+              DESPERTA!
+            </h1>
+          </div>
+          <AuthGate
+            title="ENTRAR NO JOGO"
+            subtitle="entra com Google pra evitar resposta duplicada"
+            loading={authLoading}
+            onSignIn={signInWithGoogle}
+          />
+        </div>
+      </div>
     );
   }
 
   if (step === 'enter-code') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 md:p-12 relative">
-        <div className="absolute top-4 left-4 opacity-50">
-          <Image src={logo} alt="Logo" width={50} height={50} />
-        </div>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-2xl"
-        >
-          <div className="brutal-card p-12 md:p-16 space-y-10">
-            <div className="text-center space-y-4">
-              <h1 className="text-5xl md:text-6xl font-black text-black uppercase">ENTRAR NO JOGO</h1>
-              <p className="text-xl md:text-2xl font-bold text-black">coloca o código e o nome, vai</p>
-              <p className="text-sm md:text-base font-bold text-black/70 uppercase">
-                logado como {user.email}
-              </p>
-            </div>
+      <div className="min-h-screen bg-[#123F7A] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Background grid */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(90deg, #FFD200 0px, #FFD200 1px, transparent 1px, transparent 50px), repeating-linear-gradient(180deg, #FFD200 0px, #FFD200 1px, transparent 1px, transparent 50px)',
+          }}
+        />
 
+        <div className="absolute top-5 left-5 opacity-30">
+          <Image src={logo} alt="Logo" width={36} height={36} />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="relative w-full max-w-sm"
+        >
+          {/* Header */}
+          <div className="mb-6 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#FFD200]/50">
+              Acampadentro 2026
+            </p>
+            <h1
+              className="font-black uppercase leading-none text-[#FFD200]"
+              style={{ fontSize: 'clamp(2.8rem, 11vw, 5rem)' }}
+            >
+              ENTRAR
+            </h1>
+            <p className="mt-1 text-base font-bold text-white/50">
+              coloca o código da sala e seu nome
+            </p>
+          </div>
+
+          {/* Card */}
+          <div className="rounded-2xl border-4 border-[#FFD200] bg-white shadow-[8px_8px_0_#FFD200] p-7">
             <AnimatePresence>
               {error && (
                 <motion.div
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  className="brutal-border bg-red-100 text-black px-8 py-5 rounded-xl font-bold shake"
+                  exit={{ opacity: 0, x: 8 }}
+                  className="mb-5 rounded-lg border-3 border-red-400 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 shake"
                 >
                   {error}
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleCodeSubmit} className="space-y-8">
+            <form onSubmit={handleCodeSubmit} className="space-y-5">
               <div>
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.28em] text-black/40">
+                  Código da sala
+                </label>
                 <input
                   type="text"
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  placeholder="XXXX"
+                  placeholder="0000"
                   maxLength={4}
-                  className="brutal-input w-full text-center text-5xl sm:text-6xl md:text-7xl font-black px-4 sm:px-6 md:px-8 py-6 md:py-8 rounded-xl tracking-[0.3em] sm:tracking-widest uppercase"
-                  style={{ minHeight: '80px' }}
+                  className="brutal-input w-full rounded-xl px-4 py-5 text-center text-6xl font-black tracking-[0.4em] text-black"
                   required
                 />
               </div>
 
               <div>
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.28em] text-black/40">
+                  Seu nome
+                </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="seu nome aqui"
+                  placeholder="SEU NOME"
                   maxLength={20}
-                  className="brutal-input w-full text-2xl md:text-3xl font-bold px-8 py-7 rounded-xl uppercase placeholder:text-black/40"
+                  className="brutal-input w-full rounded-xl px-5 py-4 text-xl font-black uppercase text-black placeholder:text-black/30"
                   required
                 />
               </div>
 
               <motion.button
                 whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileTap={{ scale: 0.97 }}
                 type="submit"
                 disabled={loading || !code.trim() || !name.trim() || code.length !== 4}
-                className="brutal-btn w-full bg-black text-white font-black py-7 px-10 rounded-xl text-2xl md:text-3xl uppercase"
+                className="brutal-btn w-full rounded-xl bg-[#123F7A] py-5 text-xl font-black uppercase text-[#FFD200]"
               >
-                {loading ? 'entrando...' : 'Bora'}
+                {loading ? 'entrando...' : 'Entrar no camp →'}
               </motion.button>
             </form>
 
-            <div className="pt-6 text-center">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/" className="text-black font-bold text-xl hover:underline uppercase">
-                  ← voltar
-                </Link>
-                <button
-                  type="button"
-                  onClick={signOut}
-                  className="text-black/70 font-bold text-base hover:underline uppercase"
-                >
-                  sair
-                </button>
-              </div>
+            <div className="mt-5 flex items-center justify-between">
+              <Link href="/" className="text-xs font-bold uppercase text-black/40 hover:text-black/70">
+                ← voltar
+              </Link>
+              <button
+                type="button"
+                onClick={signOut}
+                className="text-xs font-bold uppercase text-black/30 hover:text-black/60"
+              >
+                sair ({user.email?.split('@')[0]})
+              </button>
             </div>
           </div>
         </motion.div>
@@ -269,185 +307,189 @@ export default function JoinPage() {
     );
   }
 
+  // Step: select-team
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 md:p-12 relative">
-      <div className="absolute top-4 left-4 opacity-50">
-        <Image src={logo} alt="Logo" width={50} height={50} />
+    <div className="min-h-screen bg-[#123F7A] flex flex-col items-center justify-start p-6 pt-10 relative overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.05]"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(90deg, #FFD200 0px, #FFD200 1px, transparent 1px, transparent 50px), repeating-linear-gradient(180deg, #FFD200 0px, #FFD200 1px, transparent 1px, transparent 50px)',
+        }}
+      />
+
+      <div className="absolute top-5 left-5 opacity-30">
+        <Image src={logo} alt="Logo" width={36} height={36} />
       </div>
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="w-full max-w-4xl"
+        className="relative w-full max-w-lg"
       >
-        <div className="brutal-card p-12 md:p-16 space-y-10">
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-black text-black uppercase">ESCOLHE SEU TIME</h1>
-            <p className="text-xl md:text-2xl font-bold text-black">
-              E aí, <span className="underline decoration-4">{name.toUpperCase()}</span>! 👋
-            </p>
-          </div>
+        {/* Header */}
+        <div className="mb-6 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#FFD200]/50">
+            Sala {code} · {name.toUpperCase()}
+          </p>
+          <h1
+            className="font-black uppercase leading-none text-[#FFD200]"
+            style={{ fontSize: 'clamp(2.2rem, 9vw, 4rem)' }}
+          >
+            ESCOLHA<br />SEU TIME
+          </h1>
+          <p className="mt-2 text-sm font-bold text-white/40">
+            Escolha seu lado — o camp começa agora
+          </p>
+        </div>
 
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                className="brutal-border bg-red-100 text-black px-6 py-4 rounded-xl font-bold"
-              >
-                {error}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {teams.length === 0 && !isCreatingTeam && (
+        <AnimatePresence>
+          {error && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6 text-center py-8"
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0 }}
+              className="mb-4 rounded-lg border-3 border-red-400 bg-red-50 px-4 py-3 text-sm font-bold text-red-700"
             >
-              <p className="text-2xl font-bold text-black uppercase">
-                nenhum time ainda, cria o primeiro!
-              </p>
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {teams.length === 0 && !isCreatingTeam && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border-4 border-[#FFD200] bg-white p-8 text-center shadow-[8px_8px_0_#FFD200]"
+          >
+            <p className="text-xl font-black uppercase text-black">
+              Nenhum time ainda
+            </p>
+            <p className="mt-1 text-sm font-bold text-black/50">
+              Seja o primeiro — crie o seu time
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setIsCreatingTeam(true)}
+              className="brutal-btn mt-6 w-full rounded-xl bg-black py-5 text-lg font-black uppercase text-[#FFD200]"
+            >
+              Criar time
+            </motion.button>
+          </motion.div>
+        )}
+
+        {teams.length > 0 && !isCreatingTeam && (
+          <div className="space-y-3">
+            {teams.map((team, index) => (
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                key={team.id}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.07 }}
+                whileHover={{ scale: 1.02, x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => joinTeam(team.id)}
+                disabled={loading}
+                className="brutal-btn w-full rounded-xl border-4 border-black bg-white p-5 text-left shadow-[5px_5px_0_#000] transition-colors hover:bg-[#FFD200]"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-5xl leading-none">{team.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-2xl font-black uppercase text-black leading-none">{team.name}</p>
+                    <p className="mt-1 text-xs font-bold uppercase text-black/40">
+                      Entrar nesse time →
+                    </p>
+                  </div>
+                  <span className="text-3xl text-black/20">→</span>
+                </div>
+              </motion.button>
+            ))}
+
+            {teams.length < 2 && (
+              <motion.button
+                whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setIsCreatingTeam(true)}
-                className="brutal-btn bg-black text-white font-black py-6 px-10 rounded-xl text-2xl uppercase"
+                disabled={loading}
+                className="w-full rounded-xl border-3 border-white/20 bg-white/10 py-4 text-sm font-black uppercase tracking-wide text-white/50 transition hover:border-white/40 hover:bg-white/20 hover:text-white/80"
               >
-                Criar Time
+                + Criar outro time
               </motion.button>
-            </motion.div>
-          )}
+            )}
+          </div>
+        )}
 
-          {teams.length > 0 && !isCreatingTeam && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {teams.map((team, index) => (
-                  <motion.button
-                    key={team.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.03, y: -4 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => joinTeam(team.id)}
-                    disabled={loading}
-                    className="brutal-card p-8 text-left hover:bg-[#F7D043] transition-colors"
-                  >
-                    <span className="text-7xl mb-4 block">{team.emoji}</span>
-                    <p className="font-black text-3xl mb-2 uppercase">{team.name}</p>
-                    <p className="text-lg font-bold text-black/70 uppercase">entrar nesse →</p>
-                  </motion.button>
-                ))}
-              </div>
+        {isCreatingTeam && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border-4 border-[#FFD200] bg-white shadow-[8px_8px_0_#FFD200] p-7 space-y-5"
+          >
+            <h3 className="text-2xl font-black uppercase text-black">Criar time</h3>
 
-              {teams.length < 2 && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setIsCreatingTeam(true)}
-                  disabled={loading}
-                  className="brutal-btn w-full bg-white text-black font-black py-5 px-8 rounded-xl text-xl uppercase"
-                >
-                  + criar mais um time
-                </motion.button>
-              )}
+            <div>
+              <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.25em] text-black/40">
+                Nome do time
+              </label>
+              <input
+                type="text"
+                value={newTeamName}
+                onChange={(e) => setNewTeamName(e.target.value)}
+                placeholder="GUERREIROS DE DEUS"
+                maxLength={20}
+                className="brutal-input w-full rounded-xl px-5 py-4 text-lg font-black uppercase text-black placeholder:text-black/30"
+              />
             </div>
-          )}
 
-          {isCreatingTeam && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6 pt-6 border-t-4 border-black"
-            >
-              <h3 className="text-3xl font-black text-black uppercase">CRIAR TIME</h3>
-
-              <div>
-                <label className="block text-black mb-3 text-lg font-bold uppercase">
-                  nome do time
-                </label>
-                <input
-                  type="text"
-                  value={newTeamName}
-                  onChange={(e) => setNewTeamName(e.target.value)}
-                  placeholder="GUERREIROS DE DEUS"
-                  maxLength={20}
-                  className="brutal-input w-full text-xl font-bold px-6 py-4 rounded-xl uppercase placeholder:text-black/40"
-                />
-              </div>
-
-              <div>
-                <label className="block text-black mb-3 text-lg font-bold uppercase">
-                  escolhe um emoji
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedEmoji}
-                    onChange={(e) => setSelectedEmoji(e.target.value)}
-                    className="brutal-input w-full text-4xl font-bold px-6 py-5 rounded-xl uppercase appearance-none cursor-pointer bg-white"
-                    style={{
-                      backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 1rem center',
-                      backgroundSize: '1.5rem',
-                      paddingRight: '3.5rem'
-                    }}
-                  >
-                    {EMOJI_OPTIONS.map((emoji) => (
-                      <option key={emoji} value={emoji} className="text-4xl bg-white">
-                        {emoji}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="hidden">
-                <div className="grid grid-cols-5 gap-3">
+            <div>
+              <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.25em] text-black/40">
+                Emoji do time
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedEmoji}
+                  onChange={(e) => setSelectedEmoji(e.target.value)}
+                  className="brutal-input w-full rounded-xl px-5 py-4 text-3xl font-bold uppercase appearance-none cursor-pointer bg-white"
+                  style={{
+                    backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 1rem center',
+                    backgroundSize: '1.5rem',
+                    paddingRight: '3.5rem',
+                  }}
+                >
                   {EMOJI_OPTIONS.map((emoji) => (
-                    <motion.button
-                      key={emoji}
-                      type="button"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setSelectedEmoji(emoji)}
-                      className={`text-5xl p-6 rounded-xl transition-all ${
-                        selectedEmoji === emoji
-                          ? 'bg-black brutal-shadow scale-110'
-                          : 'bg-white brutal-border hover:bg-[#F7D043]'
-                      }`}
-                    >
+                    <option key={emoji} value={emoji} className="text-3xl bg-white">
                       {emoji}
-                    </motion.button>
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
+            </div>
 
-              <div className="space-y-4 pt-4">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleCreateTeam}
-                  disabled={loading || !newTeamName.trim()}
-                  className="brutal-btn w-full bg-black text-white font-black py-5 px-6 rounded-xl text-lg uppercase"
-                >
-                  {loading ? 'criando...' : 'criar e entrar'}
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setIsCreatingTeam(false)}
-                  disabled={loading}
-                  className="brutal-btn w-full bg-white text-black font-black py-5 px-6 rounded-xl text-lg uppercase"
-                >
-                  cancela
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </div>
+            <div className="space-y-3 pt-1">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleCreateTeam}
+                disabled={loading || !newTeamName.trim()}
+                className="brutal-btn w-full rounded-xl bg-black py-4 text-base font-black uppercase text-[#FFD200]"
+              >
+                {loading ? 'criando...' : 'Criar e entrar'}
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsCreatingTeam(false)}
+                disabled={loading}
+                className="brutal-btn w-full rounded-xl border-2 border-black bg-white py-4 text-base font-black uppercase text-black"
+              >
+                Cancelar
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

@@ -23,6 +23,24 @@ body {
   font-weight: 700;
 }
 
+a,
+button,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 4px solid #ffffff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px #000000;
+}
+
 /* Neobrutalist shadow utility */
 .brutal-shadow {
   box-shadow: 4px 4px 0px #000000;

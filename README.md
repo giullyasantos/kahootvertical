@@ -1,453 +1,412 @@
-# Ministry Game
+# DESPERTA! Acampadentro App
 
-Quiz bíblico em tempo real inspirado no Kahoot. Um jogo para grupos de jovens e ministérios com interface para host (telão) e jogadores (celular).
+This project is becoming the operating app for **DESPERTA! Acampadentro 2026**, an overnight church camp experience for teens/young people.
 
-## Funcionalidades
+It started as a Kahoot-style ministry quiz app. That quiz still exists and should remain usable, but it is no longer the main product. The main product is now a camp companion and live-event control system for:
 
-- 🎮 **Interface para Host**: Controle o jogo do telão
-- 📱 **Interface para Jogadores**: Responda do celular
-- ⚡ **Tempo Real**: Atualizações instantâneas via Supabase Realtime
-- 🏆 **Sistema de Pontos**: Pontuação base + bônus de velocidade
-- 📊 **Placar ao Vivo**: Ranking atualizado em tempo real
-- 🎨 **Design Inspirado no Kahoot**: Botões coloridos e interface intuitiva
+- participants on phones;
+- captains with team-only controls;
+- admins running the event from phones;
+- a presenter screen shown on a big display.
 
-## Estrutura do Projeto
+## Current Status
 
+The app is currently a **mocked, clickable scaffold**.
+
+That means the main flows are implemented enough to click through, test, and understand the experience, but most camp-specific data is not persisted to Supabase yet. Many actions update local React state only.
+
+Already working:
+
+- Acampadentro-first portal at `/`.
+- Registration form at `/register`, based on `../inscricao-acampamento.html`.
+- Onboarding flow at `/onboarding`.
+- Participant app under `/app`.
+- Captain controls at `/captain`.
+- Admin control panel under `/admin`.
+- Presenter screen at `/presenter`.
+- Legacy Kahoot routes under `/host`, `/join`, `/play`, and `/watch`.
+- Playwright end-to-end test for the main mocked flows.
+- Camp planning docs and schema draft.
+
+## Product Vision
+
+The final app should coordinate the whole camp before and during the event.
+
+The core pattern is:
+
+```text
+Admin activates a camp mode
+  -> participant phones show the right current instructions
+  -> captain phones show extra controls when needed
+  -> admin phones show scoring/progress controls
+  -> presenter screen shows a public-safe room display
+  -> points, notes, submissions, and activity history are saved
 ```
-ministry-game/
-├── app/
-│   ├── page.tsx              # Landing page
-│   ├── host/
-│   │   ├── page.tsx          # Dashboard do host
-│   │   ├── lobby/page.tsx    # Sala de espera (mostra código)
-│   │   └── game/page.tsx     # Tela do jogo (telão)
-│   ├── join/page.tsx         # Jogador entra com código
-│   └── play/page.tsx         # Tela do jogo (jogador)
-├── components/
-│   ├── AnswerButton.tsx      # Botão colorido de resposta
-│   ├── Timer.tsx             # Timer circular animado
-│   ├── Scoreboard.tsx        # Placar
-│   └── PlayerList.tsx        # Lista de jogadores
-├── hooks/
-│   ├── useRealtimeRoom.ts    # Hook para sala
-│   ├── useRealtimePlayers.ts # Hook para jogadores
-│   └── useRealtimeAnswers.ts # Hook para respostas
-├── lib/
-│   ├── supabase.ts           # Cliente Supabase
-│   ├── questions.ts          # Perguntas do quiz
-│   └── utils.ts              # Funções auxiliares
-├── types/
-│   └── index.ts              # TypeScript types
-└── supabase/
-    └── migrations/
-        └── 001_initial_schema.sql  # Schema do banco
-```
 
-## Setup
+The goal is not just to run quizzes. The app should build momentum before camp, reveal teams, send reminders, guide activities, track points fairly, handle meal responsibilities, and make the room display feel alive.
 
-### 1. Instalar dependências
+## Key Event Assumptions
+
+Current planning assumes:
+
+- Registration deadline: July 18.
+- Team reveal: July 19.
+- Menu/decor plans due: July 25.
+- Camp starts: Friday, July 31, 2026.
+- Camp ends/check-out: Sunday, August 2, 2026.
+- Expected team count: likely 3 teams if around 29-30 people attend.
+- There will be 4 admins.
+
+These should be confirmed before real launch.
+
+## Roles
+
+### Participant
+
+Participants should eventually be able to:
+
+- register and upload face photo/payment proof;
+- sign in through phone number, with email as recovery;
+- stay signed in on their phone;
+- choose one of three generated avatar options;
+- install the PWA to the home screen;
+- enable push notifications;
+- see their team after reveal;
+- receive readings, keywords, reminders, and active-mode instructions;
+- answer pre-camp prompts for team points;
+- view unlocked criteria;
+- take notes during message mode;
+- receive team alerts, including wake-up alerts if someone is marked asleep.
+
+Current mocked routes:
+
+- `/register`
+- `/onboarding`
+- `/app`
+- `/app/team`
+- `/app/criteria`
+- `/app/notes`
+- `/app/profile`
+
+### Captain
+
+Captains are participants with extra responsibility.
+
+Captains should eventually be able to:
+
+- see treasure hunt clues that regular team members cannot see;
+- submit treasure hunt answers;
+- upload team video submissions;
+- manage team-specific instructions when an activity requires one official phone.
+
+Current mocked route:
+
+- `/captain`
+
+### Admin
+
+Admins should eventually be able to:
+
+- review registrations;
+- confirm payments;
+- approve/deny participants;
+- create and balance teams;
+- assign captains;
+- reveal teams;
+- send notifications;
+- control active event mode;
+- score teams and participants;
+- mark meal completion times;
+- judge video/presentation/meal criteria;
+- enter Instagram bonus votes;
+- mark participants asleep during message mode;
+- control presenter view;
+- audit point changes.
+
+Current mocked routes:
+
+- `/admin`
+- `/admin/registrations`
+- `/admin/teams`
+- `/admin/modes`
+- `/admin/meals`
+- `/admin/points`
+- `/admin/submissions`
+- `/admin/notifications`
+- `/admin/presenter`
+
+### Presenter
+
+Presenter view is public and should be opened on a separate computer or screen.
+
+It should:
+
+- default to leaderboard when no specific mode needs a display;
+- follow the active mode selected by admins;
+- show treasure hunt progress, conversation status, meal status, quiz matchups, video status, presentation state, and final results;
+- never expose payment proof, emergency contacts, admin controls, private notes, or sensitive registration details.
+
+Current mocked route:
+
+- `/presenter`
+
+## Current Route Map
+
+| Route | Purpose | Current behavior |
+| --- | --- | --- |
+| `/` | Acampadentro portal | Links to registration, onboarding/app, admin, presenter, and legacy Kahoot tools |
+| `/register` | Participant registration | Client-side form with validation, file selection feedback, skill chips, payment proof, copy summary, success handoff |
+| `/onboarding` | First app setup | Clickable mock steps for phone, avatar, home screen, notifications |
+| `/app` | Participant home | Shows active mode, team/criteria links, meal/notification status, captain shortcut |
+| `/app/team` | Participant team view | Shows teams, members, points, meal responsibilities |
+| `/app/criteria` | Criteria view | Shows unlocked/locked criteria |
+| `/app/notes` | Message notes | Saves note locally and toggles private/team scope |
+| `/app/profile` | Participant profile | Mock avatar selection and notification toggle |
+| `/captain` | Captain control view | Mock clue answer and video upload |
+| `/admin` | Admin overview | Metrics and links to admin workflows |
+| `/admin/registrations` | Registration review | Mock approve/review/deny controls |
+| `/admin/teams` | Team management | Mock reveal/hidden state per team |
+| `/admin/modes` | Event mode control | Mock active mode switching |
+| `/admin/meals` | Meal operations | Mock timestamp buttons for food/decor/service/cleaning |
+| `/admin/points` | Point ledger | Mock manual point entry |
+| `/admin/submissions` | Videos/menus/bonus | Mock video status, judging status, Instagram vote bonus |
+| `/admin/notifications` | Push/message composer | Mock send form and local history |
+| `/admin/presenter` | Presenter control | Mock public view selector |
+| `/presenter` | Public display | Public-safe treasure progress and leaderboard |
+| `/host`, `/join`, `/play`, `/watch` | Legacy Kahoot app | Existing quiz experience remains available |
+
+## What Is Mocked Right Now
+
+These are intentionally not real yet:
+
+- registration saving;
+- file upload storage;
+- payment proof review;
+- phone OTP/login;
+- persistent sessions;
+- avatar generation;
+- PWA install detection;
+- push notification subscriptions/delivery;
+- team assignment persistence;
+- active mode persistence;
+- point ledger writes;
+- admin audit logs;
+- realtime presenter updates;
+- Google Drive/Supabase video storage;
+- Instagram vote verification.
+
+Mock state currently lives in React component state and resets on refresh.
+
+Shared mock data lives in:
+
+- `lib/camp/mockData.ts`
+
+Domain types live in:
+
+- `types/camp.ts`
+
+## Design Direction
+
+The visual direction is based on the existing registration HTML:
+
+- event-first, not generic dashboard;
+- DESPERTA blue/yellow identity;
+- bold uppercase type;
+- hard borders and high contrast;
+- participant screens energetic;
+- admin screens dense and practical;
+- presenter screen simplified and readable.
+
+The repeated signature component is the **Mode Beacon**, used to show the current active camp mode in participant, captain, admin, and presenter contexts.
+
+Important UX rule:
+
+> If it looks clickable, it must do something.
+
+For this scaffold, “doing something” can be navigation, local state update, validation, copy feedback, selected-file feedback, or a visible mocked status change.
+
+## Important Files
+
+Planning and documentation:
+
+- `README.md` - this project guide.
+- `AGENTS.md` - local agent/project instruction file.
+- `../../acampadentro-app-requirements.md` - organized requirements from the user conversation.
+
+Older one-off planning, review, setup, and legacy Kahoot design notes were consolidated into this README and removed from the app root to keep the project readable.
+
+Source references:
+
+- `../inscricao-acampamento.html` - original standalone registration form that informed `/register`.
+- `../../context/cronograma-acampamento.docx` - camp schedule document.
+
+App code:
+
+- `app/page.tsx` - Acampadentro portal.
+- `app/register/page.tsx` - registration form.
+- `app/onboarding/page.tsx` - first app setup.
+- `app/app/*` - participant routes.
+- `app/captain/page.tsx` - captain route.
+- `app/admin/*` - admin routes.
+- `app/presenter/page.tsx` - public presenter route.
+- `components/camp/*` - shared camp UI components.
+- `lib/camp/mockData.ts` - mock camp data.
+- `types/camp.ts` - camp domain types.
+
+Data/schema:
+
+- `supabase/migrations/005_camp_core.sql` - camp schema draft.
+- Existing legacy quiz migrations remain in `supabase/migrations/001_*` through `004_*`.
+
+Testing:
+
+- `playwright.config.ts`
+- `tests/acampadentro.spec.ts`
+
+## Supabase Schema Direction
+
+The camp schema draft includes tables for:
+
+- camp events;
+- admin users;
+- registrations;
+- participants;
+- avatar options;
+- teams and team memberships;
+- team reveals;
+- event modes and transitions;
+- activity rounds;
+- criteria/rubrics;
+- point ledger;
+- admin votes;
+- arrival check-ins;
+- conversation contributions;
+- sleep events;
+- treasure hunt steps/attempts;
+- pie quiz selections;
+- pre-camp prompts/answers;
+- meal assignments/plans/completions;
+- video and presentation submissions;
+- Instagram bonus entries;
+- notes;
+- notification subscriptions/jobs;
+- presenter state;
+- admin audit log.
+
+RLS is enabled in the migration, but production policies still need to be built carefully.
+
+Security/privacy priorities:
+
+- payment proof must be admin-only;
+- emergency contact information must be admin-only;
+- dietary/allergy info should be protected;
+- participants must not be able to write points;
+- captains must not access other teams' clues;
+- presenter must never expose private admin/registration data;
+- admin actions should be audited.
+
+## How To Run
+
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### 2. Configurar Supabase
-
-1. Crie um projeto no [Supabase](https://supabase.com)
-2. Execute todas as migrations em `supabase/migrations/` no SQL Editor, em ordem numérica
-3. Copie as credenciais do projeto
-4. Ative Google OAuth em Authentication → Providers no Supabase
-
-### 3. Configurar variáveis de ambiente
-
-```bash
-cp .env.local.example .env.local
-```
-
-Edite `.env.local` com suas credenciais:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anon
-```
-
-Também configure as URLs de callback do Google OAuth no Supabase para o ambiente local e o deploy.
-
-### 4. Rodar o projeto
+Start dev server:
 
 ```bash
 npm run dev
 ```
 
-Acesse em `http://localhost:3000`
-
-## Como Usar
-
-### Host (Telão)
-
-1. Acesse a página inicial e clique em "Entrar como Host"
-2. Clique em "Criar Nova Sala" → um código de 4 dígitos será gerado
-3. Aguarde os jogadores entrarem (você verá a lista ao vivo)
-4. Opcionalmente adicione +500 pontos manualmente a jogadores (para perguntas verbais)
-5. Clique em "Iniciar Jogo"
-6. O timer de 20 segundos começa automaticamente
-7. Clique em "Revelar Resposta" para mostrar a resposta correta e estatísticas
-8. Clique em "Mostrar Placar" para exibir o ranking
-9. Clique em "Próxima Pergunta" para continuar
-
-### Jogadores (Celular)
-
-1. Acesse a página inicial e clique em "Entrar como Jogador"
-2. Digite o código da sala e seu nome
-3. Aguarde o host iniciar o jogo
-4. Responda as perguntas tocando nos botões coloridos
-5. Veja seu resultado após cada resposta
-6. Acompanhe sua posição no ranking
-
-## Sistema de Pontuação
-
-- **Resposta Correta**: 1000 pontos base
-- **Bônus de Velocidade**: até 500 pontos extras (quanto mais rápido, mais pontos)
-- **Resposta Errada**: 0 pontos
-- **Pontos Manuais**: Host pode adicionar +500 pontos a qualquer jogador
-
-## Tecnologias
-
-- **Next.js 16** - Framework React
-- **Supabase** - Banco de dados PostgreSQL + Realtime
-- **TypeScript** - Type safety
-- **Tailwind CSS 4** - Estilização
-- **Vercel** - Deploy
-
-## Deploy
-
-### Vercel (Recomendado)
-
-1. Push o código para GitHub
-2. Importe o projeto no [Vercel](https://vercel.com)
-3. Adicione as variáveis de ambiente
-4. Deploy automático!
-
-## Perguntas
-
-As perguntas estão em `lib/questions.ts`. Edite este arquivo para adicionar/modificar perguntas.
-
-Cada pergunta tem:
-- `question`: O texto da pergunta
-- `options`: Array com 4 opções de resposta
-- `correct`: Índice da resposta correta (0-3)
-- `explanation`: Explicação da resposta
-- `verse`: Versículo bíblico relacionado
-
-## Cores dos Botões
-
-- 🔴 Vermelho: `#E21B3C`
-- 🔵 Azul: `#1368CE`
-- 🟡 Amarelo: `#D89E00`
-- 🟢 Verde: `#26890C`
-
-## Licença
-
-MIT
-
----
-
-# Application Content Documentation
-
-## Home Screen (/)
-- **Title**: MINISTRY GAME
-- **Subtitle**: Quiz Bíblico em Tempo Real
-- **Buttons**: 
-  - Ser Host
-  - Entrar no Jogo
-- **Footer**: Para grupos de jovens e ministérios
-
----
-
-## Host Dashboard (/host)
-- **Title**: Dashboard
-- **Subtitle**: Crie uma sala para começar
-- **Button**: Criar Nova Sala
-- **Loading State**: Criando...
-- **Error Message**: Erro ao criar sala. Tente novamente.
-- **Link**: ← Voltar
-
----
-
-## Join Page (/join)
-
-### Step 1: Enter Code
-- **Title**: Entrar
-- **Subtitle**: Código da sala + seu nome
-- **Input Placeholders**:
-  - XXXX (room code)
-  - SEU NOME (player name)
-- **Button**: Continuar
-- **Loading State**: Entrando...
-- **Error Messages**:
-  - Sala não encontrada. Verifique o código.
-  - Esta sala já iniciou o jogo.
-  - Erro ao buscar sala. Tente novamente.
-- **Link**: ← Voltar
-
-### Step 2: Select Team
-- **Title**: Escolha seu Time
-- **Greeting**: OLÁ, [PLAYER NAME]!
-- **Empty State**: Nenhum time criado ainda!
-- **Buttons**:
-  - Criar Time
-  - + Criar Novo Time
-  - Entrar → (on team cards)
-
-### Team Creation Section
-- **Title**: Criar Time
-- **Labels**:
-  - Nome do Time
-  - Escolha um Emoji
-- **Input Placeholder**: GUERREIROS DE DEUS
-- **Buttons**:
-  - Criar e Entrar
-  - Cancelar
-- **Loading State**: Criando...
-- **Error Message**: Erro ao criar time. Tente novamente.
-
----
-
-## Host Lobby (/host/lobby)
-- **Title**: Sala de Espera
-- **Label**: Código da Sala
-- **Info**: Jogadores entram com este código
-- **Team Stats**: [X] jogador / [X] jogadores
-- **Empty State**: Aguardando jogadores...
-- **Button States**:
-  - Iniciar Jogo ([X]) (when ready)
-  - Aguardando Times... (when no teams)
-  - Aguardando Jogadores... (when no players)
-  - Iniciando... (loading)
-  - Cancelar
-  - 🎯 Roleta (test button)
-
----
-
-## Host Game Screen (/host/game)
-
-### Header
-- **Progress**: Pergunta [X] / [Total]
-- **Timer**: [X] seg
-- **Answer Count**: [X] / [Total] Responderam
-
-### Question Phase
-- **Button**: Revelar Resposta
-
-### Reveal Phase
-- **Labels**:
-  - Explicação:
-  - 📖 [Verse reference]
-- **Answer Stats**: [X] resposta / [X] respostas
-- **Button**: Mostrar Placar
-
-### Scoreboard Phase
-- **Title**: Placar (during game) / 🏆 Placar Final (finished)
-- **Team Info**: [Score] pts
-- **Buttons**:
-  - Próxima Pergunta (during game)
-  - 🎯 Roleta (after game)
-  - Nova Sala (after game)
-
----
-
-## Host Roulette Screen (/host/roulette)
-
-### Name Roulette Phase
-- **Title**: Vez do time: [Emoji] [Team Name]
-- **Display**: ? (when not spinning) / [Player Name] (when spinning)
-- **Button**: 🎯 Girar Roleta / 🎰 Girando...
-- **Info**: [X] jogador restante / [X] jogadores restantes neste time
-
-### Waiting for Difficulty Phase
-- **Title**: Jogador Selecionado:
-- **Display**: [Player Name]
-- **Info**: Aguardando escolha de dificuldade no celular...
-
-### Difficulty Revealed Phase
-- **Title**: Dificuldade Escolhida:
-- **Options**:
-  - 🟢 FÁCIL
-  - 🟡 MÉDIO
-  - 🔴 DIFÍCIL
-
-### Superpower Window Phase
-- **Title**: Janela de Superpoderes
-- **Timer**: [X]s
-- **Superpowers**:
-  - 🔵 Checar com Amigos
-  - 🟡 Double Points
-- **Status**: ATIVO (when activated)
-
-### Question Revealed Phase
-- **Banner**: ⚡ DOUBLE POINTS ATIVO (when active)
-- **Title**: Pergunta:
-- **Info**: O jogador deve responder verbalmente
-- **Point Buttons**:
-  - 0 pts
-  - 500 pts / 1000 pts (if double points)
-  - 1000 pts / 2000 pts (if double points)
-
-### Final Results Phase
-- **Title**: 🎉 Roleta Finalizada!
-- **Team Display**: [Score] pts
-- **Button**: Ver Resultado Final
-
----
-
-## Player Game Screen (/play)
-
-### Top Bar
-- **Labels**:
-  - Sala
-  - Rank
-- **Display**: [Room Code], [Player Name], [Score] pts, #[Rank]
-
-### Waiting Phase
-- **Icon**: ⏳
-- **Title**: Aguardando...
-- **Message**: O jogo começará em breve!
-
-### Playing Phase
-- **Progress**: Pergunta [X] / [Total]
-- **Time Up Banner**: ⏰ Tempo Esgotado!
-- **Answer Labels**: A, B, C, D
-
-### Answered Phase
-- **Icon**: ✓
-- **Title**: Resposta Enviada!
-- **Message**: Aguardando os outros...
-
-### Result Phase
-- **Correct**:
-  - Icon: 🎉
-  - Title: Correto!
-  - Label: Pontos Ganhos
-  - Display: +[Points]
-- **Incorrect**:
-  - Icon: ❌
-  - Title: Incorreto
-- **Score Display**:
-  - Label: Sua Pontuação
-  - Rank: #[X]º lugar
-
-### Finished Phase
-- **Winner**:
-  - Title: Você Ganhou!
-- **Loser**:
-  - Title: Você Perdeu!
-- **Labels**:
-  - Pontuação Final
-  - 🥇 Campeão!
-  - 🥈 2º Lugar!
-  - 🥉 3º Lugar!
-  - [X]º lugar
-- **Button**: Voltar ao Início
-
-### Loading State
-- **Message**: Carregando...
-
----
-
-## Player Roulette Screen (/play-roulette)
-
-### Header
-- **Display**: [Player Name], [Score] pts
-
-### Waiting Phase
-- **Icon**: ⏳
-- **Title**: Aguardando sua vez...
-
-### Selected Phase
-- **Icon**: 🎯
-- **Title**: É A SUA VEZ! 🔥
-
-### Spin Difficulty Phase
-- **Title**: Escolha a Dificuldade
-- **Display**:
-  - 🟢 FÁCIL
-  - 🟡 MÉDIO
-  - 🔴 DIFÍCIL
-- **Button**: 🎯 Girar / 🎰 Girando...
-
-### Superpower Window Phase
-- **Title**: Superpoderes
-- **Timer**: [X]s
-- **Superpower Options**:
-  - 🔵 Checar com Amigos
-  - 🟡 Double Points
-- **Used Status**: Já usado
-
-### Question Time Phase
-- **Icon**: 🎤
-- **Title**: Responda verbalmente!
-- **Message**: O host vai pontuar sua resposta
-
-### Finished Phase
-- **Icon**: ✅
-- **Title**: Você já jogou!
-- **Message**: Aguarde os outros jogadores
-- **Label**: Pontuação do Time
-- **Display**: [Team Emoji], [Team Name], [Score] pts
-
-### Loading State
-- **Message**: Carregando...
-
----
-
-## General UI Elements
-
-### Loading States
-- Carregando...
-- Criando...
-- Entrando...
-- Iniciando...
-- 🎰 Girando...
-
-### Navigation Links
-- ← Voltar
-- Voltar ao Início
-- Nova Sala
-
-### Icons & Emojis Used
-- ⏳ (waiting)
-- ✓ (submitted)
-- 🎉 (correct)
-- ❌ (incorrect)
-- ⏰ (time up)
-- 🎯 (roulette/target)
-- 🔥 (selected)
-- 🎤 (speak)
-- ✅ (finished)
-- 🥇🥈🥉 (rankings)
-- 👑 (captain)
-- 🟢🟡🔴 (difficulty levels)
-- 🔵 (friend lifeline)
-- 🟡 (double points)
-- ⚡ (active power)
-- 🏆 (trophy/final)
-- 📖 (verse reference)
-
----
-
-## Error Messages
-- Sala não encontrada. Verifique o código.
-- Esta sala já iniciou o jogo.
-- Erro ao buscar sala. Tente novamente.
-- Erro ao criar sala. Tente novamente.
-- Erro ao criar time. Tente novamente.
-- Erro ao entrar no time. Tente novamente.
-
----
-
-## Notes
-- All text is in Brazilian Portuguese
-- Game is designed for youth groups and ministries
-- Real-time multiplayer Bible quiz game
-- Supports team-based gameplay with superpowers
-- Includes both multiple-choice questions and verbal roulette rounds
+Open:
+
+```text
+http://localhost:3000
+```
+
+## How To Test
+
+Run lint:
+
+```bash
+npm run lint
+```
+
+Run production build:
+
+```bash
+npm run build
+```
+
+Run Playwright end-to-end tests:
+
+```bash
+npm run test:e2e
+```
+
+The current e2e test covers:
+
+- portal navigation;
+- registration validation/submission;
+- onboarding completion;
+- participant notes/profile controls;
+- captain answer/upload controls;
+- admin meal/registration/points/notification/submission/presenter controls.
+
+## Development Notes
+
+- This is a Next.js App Router project.
+- Use `Link` for navigation.
+- Use real `button` elements for state changes.
+- Do not nest `button` inside `Link`.
+- Add `'use client'` only to files that need local state/events/browser APIs.
+- Keep participant and admin mobile flows usable.
+- Keep presenter public-safe.
+- Keep legacy Kahoot routes working unless explicitly removed later.
+
+## Next Major Work
+
+Recommended next phases:
+
+1. Connect `/register` to Supabase and storage.
+2. Build phone/email identity and persistent session flow.
+3. Add real admin allowlist and policies.
+4. Implement real team assignment and reveal.
+5. Implement PWA manifest/service worker/install guidance.
+6. Implement push notification subscriptions and send endpoints.
+7. Persist active event mode and presenter state.
+8. Build scoring helpers and real point ledger writes.
+9. Add realtime subscriptions for presenter/admin views.
+10. Connect captain treasure hunt flow to real steps/attempts.
+11. Connect video upload to chosen storage provider.
+12. Add admin audit logs.
+
+## Current Verification
+
+Last verified after the UX refocus:
+
+- `npm run test:e2e`: passed.
+- `npm run lint`: passed.
+- `npm run build`: passed.
+- Playwright route scan: passed for the main Acampadentro routes, with no nested interactive controls and no horizontal overflow on checked mobile routes.
+- HTTP smoke checks returned `200 OK` for:
+  - `/`
+  - `/register`
+  - `/onboarding`
+  - `/app`
+  - `/captain`
+  - `/admin`
+  - `/presenter`
+  - `/host`
+  - `/join`
+  - `/watch`
+
+## Known Caveats
+
+- The app is not production-ready yet.
+- Most Acampadentro state is mocked and resets on refresh.
+- Supabase tables exist as a draft migration, but policies and app integration are incomplete.
+- The package is still named `ministry-game`; rename later if desired.
+- Legacy Kahoot docs/features are still present because the old quiz is still an activity/tool.
+- `npm install` reported moderate dependency vulnerabilities; no forced audit fix was applied because that can change versions broadly.
