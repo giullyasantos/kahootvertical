@@ -9,42 +9,74 @@ interface CampShellProps {
 }
 
 const navItems = [
-  { href: '/app', label: 'Agora' },
-  { href: '/app/team', label: 'Time' },
-  { href: '/app/criteria', label: 'Criterios' },
-  { href: '/app/notes', label: 'Notas' },
-  { href: '/app/profile', label: 'Perfil' },
+  { href: '/app',           label: 'Agora',     icon: '⚡' },
+  { href: '/app/team',      label: 'Time',       icon: '👥' },
+  { href: '/app/criteria',  label: 'Critérios',  icon: '📋' },
+  { href: '/app/notes',     label: 'Notas',      icon: '✏️' },
+  { href: '/app/profile',   label: 'Perfil',     icon: '○'  },
 ];
 
 export function CampShell({ children, title, kicker, activePath = '/app' }: CampShellProps) {
+  const isHome = activePath === '/app';
+
   return (
-    <main className="min-h-screen bg-[#FFD200] px-4 py-5 text-black md:px-8 md:py-8">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
-        <header className="flex flex-col gap-4 rounded-lg border-4 border-black bg-[#FFFDF5] p-5 shadow-[6px_6px_0_#000] md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-black/55">{kicker}</p>
-            <h1 className="mt-2 text-4xl font-black uppercase leading-none md:text-6xl">{title}</h1>
-          </div>
-          <nav className="flex gap-2 overflow-x-auto pb-1" aria-label="Navegacao do app">
-            {navItems.map((item) => {
-              const active = item.href === activePath;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`shrink-0 rounded-md border-2 border-black px-3 py-2 text-sm font-black uppercase ${
-                    active ? 'bg-black text-white' : 'bg-white text-black'
+    <div className="min-h-screen bg-[#061D3F] text-white">
+
+      {/* Sub-page header — hidden on the Agora home screen */}
+      {!isHome && (
+        <header className="sticky top-0 z-40 border-b border-white/10 bg-[#061D3F]/95 px-5 pb-4 pt-10 backdrop-blur-sm">
+          <p className="text-[10px] font-black uppercase tracking-[0.32em] text-[#FFD200]/60">
+            {kicker}
+          </p>
+          <h1 className="mt-1 text-3xl font-black uppercase leading-none text-white">
+            {title}
+          </h1>
+        </header>
+      )}
+
+      {/* Page content — padded for bottom nav */}
+      <main className="pb-24">
+        {children}
+      </main>
+
+      {/* ── Fixed bottom nav ── */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-50 bg-white"
+        style={{
+          borderTop: '2px solid #000',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        }}
+      >
+        <div className="mx-auto flex max-w-lg">
+          {navItems.map((item) => {
+            const active = item.href === activePath;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex flex-1 select-none flex-col items-center gap-0.5 py-2.5 active:bg-black/5"
+              >
+                <span
+                  className={`text-base leading-none transition-opacity ${
+                    active ? 'opacity-100' : 'opacity-30'
+                  }`}
+                >
+                  {item.icon}
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide transition-all ${
+                    active
+                      ? 'bg-[#FFD200] text-black'
+                      : 'text-black/35'
                   }`}
                 >
                   {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </header>
-        {children}
-      </div>
-    </main>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
   );
 }
-

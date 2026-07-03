@@ -1,94 +1,220 @@
 import Link from 'next/link';
+import { activeMode, campTeams } from '@/lib/camp/mockData';
 import { CampShell } from '@/components/camp/CampShell';
-import { ModeBeacon } from '@/components/camp/ModeBeacon';
-import { StatusCard } from '@/components/camp/StatusCard';
-import { activeMode, campTeams, criteriaSets, mealAssignments, treasureProgress } from '@/lib/camp/mockData';
+
+// ── Per-mode skin config ──────────────────────────────────────────────────────
+const modeSkins: Record<string, {
+  bg: string;
+  accent: string;
+  icon: string;
+  label: string;
+  instruction: string;
+  lockNote?: string;
+}> = {
+  treasure_hunt: {
+    bg: 'linear-gradient(135deg, #1a0533 0%, #2e1065 50%, #123F7A 100%)',
+    accent: '#7C3AED',
+    icon: '🔒',
+    label: 'Caça ao Tesouro',
+    instruction: 'As pistas estão com seu capitão.',
+    lockNote: 'Fique com o time e siga o capitão.',
+  },
+  conversation: {
+    bg: 'linear-gradient(135deg, #431407 0%, #9a3412 100%)',
+    accent: '#F97316',
+    icon: '💬',
+    label: 'Roda de Conversa',
+    instruction: 'Participe com atenção.',
+    lockNote: 'Mais pessoas falando bem = mais pontos pro time.',
+  },
+  meal: {
+    bg: 'linear-gradient(135deg, #1c1408 0%, #854d0e 100%)',
+    accent: '#FFB703',
+    icon: '🍳',
+    label: 'Refeição',
+    instruction: 'Veja a função do seu time.',
+  },
+  message: {
+    bg: 'linear-gradient(135deg, #0f1f0a 0%, #166534 100%)',
+    accent: '#84CC16',
+    icon: '📖',
+    label: 'Mensagem',
+    instruction: 'Presta atenção e anota o que precisar.',
+  },
+  pie_quiz: {
+    bg: 'linear-gradient(135deg, #1e0a0a 0%, #991b1b 100%)',
+    accent: '#EF4444',
+    icon: '🥧',
+    label: 'Quiz da Torta',
+    instruction: 'Presta atenção — pode ser você.',
+  },
+  video_challenge: {
+    bg: 'linear-gradient(135deg, #030712 0%, #1e3a5f 100%)',
+    accent: '#38BDF8',
+    icon: '🎬',
+    label: 'Desafio em Vídeo',
+    instruction: 'Veja os critérios e ajude o time.',
+  },
+  arrival: {
+    bg: 'linear-gradient(135deg, #0c0a1e 0%, #1e1b4b 100%)',
+    accent: '#6366F1',
+    icon: '🚪',
+    label: 'Chegada',
+    instruction: 'Chegue antes do limite e evite perder pontos.',
+  },
+  closing: {
+    bg: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
+    accent: '#FFD200',
+    icon: '🏆',
+    label: 'Encerramento',
+    instruction: 'O camp chegou ao fim. Veja o placar final.',
+  },
+};
+
+const fallbackSkin = {
+  bg: 'linear-gradient(135deg, #061D3F 0%, #123F7A 100%)',
+  accent: '#FFD200',
+  icon: '⚡',
+  label: activeMode.title,
+  instruction: activeMode.participantSummary ?? 'Fique atento ao próximo aviso.',
+};
 
 export default function ParticipantHomePage() {
-  const nextMeal = mealAssignments[0];
-  const currentCriteria = criteriaSets.filter((criteria) => criteria.unlocked);
+  const skin = modeSkins[activeMode.type] ?? fallbackSkin;
+  const sortedTeams = [...campTeams].sort((a, b) => b.score - a.score);
+  const medals = ['🥇', '🥈', '🥉'];
 
   return (
-    <CampShell title="Acampadentro" kicker="DESPERTA! 2026" activePath="/app">
-      <ModeBeacon mode={activeMode} role="participant" />
+    <CampShell title="Agora" kicker="DESPERTA! 2026" activePath="/app">
+      <div className="mx-auto max-w-[420px] px-4 pt-5">
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <StatusCard
-          title="Seu proximo passo"
-          value="Fique com o time"
-          detail="As pistas principais aparecem no celular do capitao durante a caca ao tesouro."
-        />
-        <StatusCard
-          title="Times revelados"
-          value={`${campTeams.length} times`}
-          detail="Veja seu time, capitao, avatares e responsabilidades."
-        >
-          <Link href="/app/team" className="font-black uppercase underline">
-            Ver time
-          </Link>
-        </StatusCard>
-        <StatusCard
-          title="Criterios liberados"
-          value={`${currentCriteria.length}`}
-          detail="Criterios futuros continuam trancados ate o modo comecar."
-        >
-          <Link href="/app/criteria" className="font-black uppercase underline">
-            Abrir criterios
-          </Link>
-        </StatusCard>
-      </section>
-
-      <section className="rounded-lg border-4 border-black bg-white p-5 shadow-[6px_6px_0_#000]">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-black/55">Progresso publico</p>
-            <h2 className="mt-1 text-3xl font-black uppercase">Caca ao tesouro</h2>
-          </div>
-          <p className="rounded-md border-2 border-black bg-[#FFF5C2] px-3 py-2 text-sm font-black uppercase">
-            Telao acompanha em tempo real
-          </p>
+        {/* ── Status eyebrow ── */}
+        <div className="mb-4 flex items-center gap-2">
+          <span className="relative flex h-2 w-2 flex-shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FFD200] opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#FFD200]" />
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-[0.32em] text-[#FFD200]/60">
+            DESPERTA! · ao vivo
+          </span>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {treasureProgress.map((progress) => {
-            const team = campTeams.find((item) => item.id === progress.teamId);
-            return (
-              <div key={progress.teamId} className="rounded-lg border-2 border-black bg-[#FFFDF5] p-4">
-                <p className="text-sm font-black uppercase">{team?.name}</p>
-                <p className="mt-2 text-4xl font-black">{progress.percent}%</p>
+
+        {/* ── Mode hero card ── */}
+        <div
+          className="relative overflow-hidden rounded-2xl"
+          style={{
+            background: skin.bg,
+            border: `2px solid ${skin.accent}30`,
+            boxShadow: `0 0 40px ${skin.accent}20, 0 8px 32px rgba(0,0,0,0.5)`,
+          }}
+        >
+          {/* Glow orb */}
+          <div
+            className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full opacity-20"
+            style={{ background: `radial-gradient(circle, ${skin.accent}, transparent 70%)` }}
+          />
+          {/* Subtle grid texture */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(0deg,#fff 0px,#fff 1px,transparent 1px,transparent 28px),repeating-linear-gradient(90deg,#fff 0px,#fff 1px,transparent 1px,transparent 28px)',
+            }}
+          />
+
+          <div className="relative p-6 pb-7">
+            {/* Mode label */}
+            <div
+              className="mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em]"
+              style={{ background: `${skin.accent}22`, color: skin.accent, border: `1px solid ${skin.accent}44` }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: skin.accent }} />
+              {activeMode.type.replace('_', ' ')}
+            </div>
+
+            {/* Big icon */}
+            <div className="mb-3 text-5xl leading-none">{skin.icon}</div>
+
+            {/* Mode title */}
+            <h2
+              className="font-black uppercase leading-[0.88] text-white"
+              style={{ fontSize: 'clamp(2rem, 9vw, 2.75rem)' }}
+            >
+              {skin.label}
+            </h2>
+
+            {/* Main instruction */}
+            <p
+              className="mt-3 text-base font-bold leading-snug"
+              style={{ color: 'rgba(255,255,255,0.75)' }}
+            >
+              {skin.instruction}
+            </p>
+
+            {/* Lock note */}
+            {skin.lockNote && (
+              <div
+                className="mt-4 rounded-xl px-4 py-3 text-sm font-bold"
+                style={{ background: 'rgba(0,0,0,0.3)', color: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                {skin.lockNote}
               </div>
-            );
-          })}
+            )}
+          </div>
         </div>
-      </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <StatusCard
-          title="Refeicao"
-          value="Cafe da manha"
-          detail={`Pronto as ${new Intl.DateTimeFormat('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'America/New_York',
-          }).format(new Date(nextMeal.readyAt))}. A pontuacao usa a hora real de entrega.`}
-        />
-        <StatusCard
-          title="Notificacoes"
-          value="Ative no app"
-          detail="Os avisos de leitura, keyword, time revelado e modo ativo dependem da permissao no telefone."
-        >
-          <Link href="/app/profile" className="font-black uppercase underline">
-            Abrir perfil
-          </Link>
-        </StatusCard>
-      </section>
+        {/* ── Leaderboard ── */}
+        <div className="mt-4">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-[0.28em] text-white/30">
+              Placar
+            </span>
+            <Link
+              href="/app/team"
+              className="text-[10px] font-black uppercase tracking-wide text-[#FFD200]/50 active:text-[#FFD200]"
+            >
+              Ver times →
+            </Link>
+          </div>
 
-      <section className="rounded-lg border-4 border-black bg-black p-5 text-white shadow-[6px_6px_0_#000]">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-white/60">Atalho de papel</p>
-        <h2 className="mt-2 text-3xl font-black uppercase">Se voce for capitao, use o controle do time</h2>
-        <Link href="/captain" className="mt-4 inline-flex rounded-md border-2 border-white bg-[#FFD200] px-4 py-3 font-black uppercase text-black">
-          Abrir modo capitao
-        </Link>
-      </section>
+          <div className="overflow-hidden rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+            {sortedTeams.map((team, i) => (
+              <Link
+                key={team.id}
+                href="/app/team"
+                className="flex items-center gap-3 px-4 py-3 transition-colors active:bg-white/5"
+                style={{
+                  borderBottom: i < sortedTeams.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                  background: i === 0 ? 'rgba(255,255,255,0.04)' : 'transparent',
+                }}
+              >
+                {/* Rank */}
+                <span className="w-6 text-center text-lg leading-none">{medals[i]}</span>
+
+                {/* Color dot */}
+                <span
+                  className="h-3 w-3 flex-shrink-0 rounded-full"
+                  style={{ backgroundColor: team.color, boxShadow: `0 0 8px ${team.color}80` }}
+                />
+
+                {/* Name */}
+                <span className="flex-1 text-sm font-black uppercase text-white/80">
+                  {team.name}
+                </span>
+
+                {/* Score */}
+                <span
+                  className="text-lg font-black tabular-nums"
+                  style={{ color: i === 0 ? '#FFD200' : 'rgba(255,255,255,0.5)' }}
+                >
+                  {team.score.toLocaleString('pt-BR')}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+      </div>
     </CampShell>
   );
 }
