@@ -1,7 +1,7 @@
 'use client';
 
-import { FormEvent, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, Suspense, useEffect, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 import { getSession, saveSession } from '@/lib/session';
 
@@ -14,7 +14,195 @@ const PLACEHOLDER_AVATARS = [
   { id: 'av3', bg: '#0c0c0c', icon: '🦅' },
 ];
 
-type Step = 'phone' | 'avatar' | 'notify' | 'done';
+type Step = 'install' | 'phone' | 'avatar' | 'notify' | 'done';
+type BrowserKind = 'instagram' | 'ios' | 'android' | 'other';
+
+function detectBrowser(): BrowserKind {
+  if (typeof navigator === 'undefined') return 'other';
+  const ua = navigator.userAgent;
+  if (/Instagram/.test(ua)) return 'instagram';
+  if (/iP(hone|od|ad)/.test(ua)) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return 'other';
+}
+
+// ─── Install step ─────────────────────────────────────────────────────────────
+function InstallStep({ onDone }: { onDone: () => void }) {
+  const [browser] = useState<BrowserKind>(() => detectBrowser());
+  const [subStep, setSubStep] = useState<'detect' | 'instructions' | 'done'>('detect');
+
+  const instructions: Record<BrowserKind, { icon: string; title: string; steps: string[] }> = {
+    instagram: {
+      icon: '📸',
+      title: 'Sai do Instagram primeiro',
+      steps: [
+        'Toca nos 3 pontinhos (⋯) no canto superior direito.',
+        'Toca em "Abrir no navegador externo".',
+        'O Safari ou Chrome vai abrir com essa mesma página — continue por lá.',
+      ],
+    },
+    ios: {
+      icon: '📱',
+      title: 'Salva no iPhone',
+      steps: [
+        'Toca no ícone de Compartilhar (□↑) na barra inferior do Safari.',
+        'Role pra baixo e toca em "Adicionar à Tela de Início".',
+        'Toca em "Adicionar" no canto superior direito.',
+        'Feche o Safari e abra o app pela tela inicial.',
+      ],
+    },
+    android: {
+      icon: '🤖',
+      title: 'Salva no Android',
+      steps: [
+        'Toca nos 3 pontinhos (⋮) no canto superior direito do Chrome.',
+        'Toca em "Adicionar à tela inicial".',
+        'Toca em "Adicionar" na confirmação.',
+        'Feche o Chrome e abra o app pela tela inicial.',
+      ],
+    },
+    other: {
+      icon: '🌐',
+      title: 'Salva o app',
+      steps: [
+        'iPhone (Safari): Compartilhar → "Adicionar à Tela de Início" → Adicionar.',
+        'Android (Chrome): Menu (⋮) → "Adicionar à tela inicial" → Adicionar.',
+        'Feche o navegador e abra o app pela tela inicial.',
+      ],
+    },
+  };
+
+  const info = instructions[browser];
+
+  return (
+    <Card>
+      {/* Success badge */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+        <div style={{
+          width: 56, height: 56, borderRadius: '50%',
+          background: '#FFD200', color: '#0c0c0c',
+          display: 'grid', placeItems: 'center', fontSize: 26,
+        }}>✓</div>
+      </div>
+
+      <h2 style={{ fontSize: 24, fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.1, marginBottom: 8, textAlign: 'center' }}>
+        Inscrição enviada!
+      </h2>
+      <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 1.5, marginBottom: 24 }}>
+        Agora salva o app na sua tela inicial pra receber os avisos do camp.
+      </p>
+
+      {subStep === 'detect' && (
+        <>
+          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'rgba(255,255,255,0.3)', marginBottom: 12 }}>
+            Você está usando...
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {([
+              { kind: 'instagram' as BrowserKind, label: 'Instagram', icon: '📸' },
+              { kind: 'ios'       as BrowserKind, label: 'Safari (iPhone)', icon: '📱' },
+              { kind: 'android'   as BrowserKind, label: 'Chrome (Android)', icon: '🤖' },
+              { kind: 'other'     as BrowserKind, label: 'Outro navegador', icon: '🌐' },
+            ]).map((opt) => (
+              <button
+                key={opt.kind}
+                type="button"
+                onClick={() => setSubStep('instructions')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  background: browser === opt.kind ? 'rgba(255,210,0,0.1)' : 'rgba(255,255,255,0.06)',
+                  border: `1.5px solid ${browser === opt.kind ? 'rgba(255,210,0,0.35)' : 'rgba(255,255,255,0.1)'}`,
+                  borderRadius: 12, padding: '13px 15px', cursor: 'pointer', textAlign: 'left', width: '100%',
+                }}
+              >
+                <span style={{ fontSize: 22 }}>{opt.icon}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: browser === opt.kind ? '#FFD200' : 'rgba(255,255,255,0.6)' }}>
+                  {opt.label}
+                  {browser === opt.kind && <span style={{ fontSize: 11, color: 'rgba(255,210,0,0.6)', marginLeft: 8 }}>detectado</span>}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {subStep === 'instructions' && (
+        <>
+          <div style={{ fontSize: 32, textAlign: 'center', marginBottom: 10 }}>{info.icon}</div>
+          <h3 style={{ fontSize: 18, fontWeight: 900, textTransform: 'uppercase', marginBottom: 16, textAlign: 'center' }}>
+            {info.title}
+          </h3>
+          <ol style={{ listStyle: 'none', padding: 0, margin: '0 0 20px' }}>
+            {info.steps.map((s, i) => (
+              <li key={i} style={{ display: 'flex', gap: 14, marginBottom: 12, fontSize: 14, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
+                <span style={{
+                  flexShrink: 0, width: 24, height: 24, borderRadius: '50%',
+                  background: '#FFD200', color: '#0c0c0c',
+                  display: 'grid', placeItems: 'center',
+                  fontWeight: 900, fontSize: 12, marginTop: 1,
+                }}>{i + 1}</span>
+                <span dangerouslySetInnerHTML={{ __html: s.replace(/("[^"]+"|⋯|⋮|□↑)/g, '<b style="color:#FFD200">$1</b>') }} />
+              </li>
+            ))}
+          </ol>
+
+          <button
+            type="button"
+            onClick={() => setSubStep('done')}
+            style={{
+              width: '100%', fontWeight: 900, fontSize: 17, letterSpacing: '0.06em',
+              textTransform: 'uppercase', color: '#0c0c0c', background: '#FFD200',
+              border: 'none', borderRadius: 12, padding: '15px 16px', cursor: 'pointer',
+              boxShadow: '0 12px 28px -10px rgba(255,210,0,0.45)',
+            }}
+          >
+            {browser === 'instagram' ? 'Entendi, vou abrir no navegador' : 'Salvei na tela inicial ✓'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSubStep('detect')}
+            style={{ display: 'block', width: '100%', marginTop: 10, background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 0' }}
+          >
+            ← Outro navegador
+          </button>
+        </>
+      )}
+
+      {subStep === 'done' && (
+        <>
+          {browser === 'instagram' ? (
+            <div style={{ background: 'rgba(255,210,0,0.08)', border: '1px solid rgba(255,210,0,0.2)', borderRadius: 12, padding: '16px', marginBottom: 20, textAlign: 'center' }}>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
+                Quando o Safari ou Chrome abrir, segue as instruções pra salvar na tela inicial. Depois volte e entre com seu número.
+              </p>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '8px 0 20px' }}>
+              <div style={{ fontSize: 40, marginBottom: 8 }}>🎉</div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#FFD200' }}>App salvo!</p>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>
+                Abre ele pela tela inicial e entra com seu número.
+              </p>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={onDone}
+            style={{
+              width: '100%', fontWeight: 900, fontSize: 17, letterSpacing: '0.06em',
+              textTransform: 'uppercase', color: '#0c0c0c', background: '#FFD200',
+              border: 'none', borderRadius: 12, padding: '15px 16px', cursor: 'pointer',
+              boxShadow: '0 12px 28px -10px rgba(255,210,0,0.45)',
+            }}
+          >
+            Entrar com meu número →
+          </button>
+        </>
+      )}
+    </Card>
+  );
+}
 
 // ─── No-account modal ─────────────────────────────────────────────────────────
 function NoAccountModal({ phone, onClose }: { phone: string; onClose: () => void }) {
@@ -108,6 +296,7 @@ function BgLayer() {
 // ─── Step pill progress bar ───────────────────────────────────────────────────
 const STEPS: Step[] = ['phone', 'avatar', 'notify'];
 const STEP_LABELS: Record<Step, string> = {
+  install: 'Instalar',
   phone: 'Telefone',
   avatar: 'Avatar',
   notify: 'Avisos',
@@ -198,9 +387,11 @@ function PrimaryBtn({ children, onClick, disabled, type = 'button' }: {
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>('phone');
+  const searchParams = useSearchParams();
+  const welcome = searchParams.get('welcome') === '1';
+  const [step, setStep] = useState<Step>(welcome ? 'install' : 'phone');
 
   // Phone step state
   const [phone, setPhone] = useState('');
@@ -353,7 +544,12 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        {step !== 'done' && <StepBar current={step} />}
+        {step !== 'done' && step !== 'install' && <StepBar current={step} />}
+
+        {/* ── Install step (post-registration) ── */}
+        {step === 'install' && (
+          <InstallStep onDone={() => setStep('phone')} />
+        )}
 
         {/* ── Step 1: Phone ── */}
         {step === 'phone' && (
@@ -519,5 +715,17 @@ export default function OnboardingPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: 'radial-gradient(130% 95% at 50% 18%, #2170d6 0%, #061d3f 100%)', display: 'grid', placeItems: 'center' }}>
+        <span style={{ color: '#FFD200', fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.2em', opacity: 0.5 }}>•••</span>
+      </div>
+    }>
+      <OnboardingContent />
+    </Suspense>
   );
 }

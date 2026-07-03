@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 
 // ─── The active camp event ID from the database.
@@ -348,6 +349,7 @@ function SuccessScreen({ name, onReset }: { name: string; onReset: () => void })
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function RegisterPage() {
+  const router = useRouter();
   const [form, setForm] = useState<RegistrationFormState>(initialForm);
   const [skills, setSkills] = useState<string[]>([]);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -356,7 +358,7 @@ export default function RegisterPage() {
   const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Partial<Record<RequiredField | 'payment' | 'submit', string>>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(false); // kept for reset flow
 
   const photoInputRef = useRef<HTMLInputElement>(null);
   const proofInputRef = useRef<HTMLInputElement>(null);
@@ -467,6 +469,7 @@ export default function RegisterPage() {
       }
 
       setSubmitted(true);
+      router.replace('/onboarding?welcome=1');
     } catch (err) {
       console.error('Registration error:', err);
       setErrors({ submit: 'Erro inesperado. Tenta de novo ou fala com a liderança.' });
