@@ -19,7 +19,7 @@ export function SessionGuard({ children, requireSession = true, requireOnboardin
     const session = getSession();
 
     if (requireSession && !session?.registrationId) {
-      router.replace('/register');
+      router.replace('/onboarding');
       return;
     }
 

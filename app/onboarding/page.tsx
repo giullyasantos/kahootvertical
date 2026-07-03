@@ -16,6 +16,73 @@ const PLACEHOLDER_AVATARS = [
 
 type Step = 'phone' | 'avatar' | 'notify' | 'done';
 
+// ─── No-account modal ─────────────────────────────────────────────────────────
+function NoAccountModal({ phone, onClose }: { phone: string; onClose: () => void }) {
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
+        aria-hidden
+      />
+      {/* Sheet */}
+      <div style={{
+        position: 'fixed', inset: 'auto 0 0 0', zIndex: 90,
+        background: '#0a1f3d',
+        borderRadius: '20px 20px 0 0',
+        border: '2px solid rgba(255,255,255,0.1)',
+        borderBottom: 'none',
+        padding: '28px 24px 40px',
+        boxShadow: '0 -20px 60px rgba(0,0,0,0.5)',
+      }}>
+        {/* Handle */}
+        <div style={{ width: 36, height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.15)', margin: '0 auto 24px' }} />
+
+        <div style={{ fontSize: 44, textAlign: 'center', marginBottom: 16 }}>🤔</div>
+
+        <h2 style={{ fontSize: 24, fontWeight: 900, textTransform: 'uppercase', color: '#fff', textAlign: 'center', lineHeight: 1.15, marginBottom: 10 }}>
+          Número não encontrado
+        </h2>
+
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 1.6, marginBottom: 6 }}>
+          O número <b style={{ color: '#FFD200' }}>{phone}</b> não tem inscrição ainda.
+        </p>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 1.6, marginBottom: 28 }}>
+          Faz a inscrição primeiro — é rápido. Depois volta aqui e entra com o mesmo número.
+        </p>
+
+        <a
+          href="/register"
+          style={{
+            display: 'block', textAlign: 'center', width: '100%',
+            fontWeight: 900, fontSize: 17, textTransform: 'uppercase', letterSpacing: '0.06em',
+            color: '#0c0c0c', background: '#FFD200',
+            borderRadius: 14, padding: '15px 16px',
+            textDecoration: 'none',
+            boxShadow: '0 10px 28px -8px rgba(255,210,0,0.45)',
+          }}
+        >
+          Fazer inscrição →
+        </a>
+
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            display: 'block', width: '100%', marginTop: 10,
+            fontWeight: 700, fontSize: 14, textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.3)', background: 'transparent',
+            border: 'none', padding: '12px', cursor: 'pointer',
+          }}
+        >
+          Tentar outro número
+        </button>
+      </div>
+    </>
+  );
+}
+
 // ─── Background ───────────────────────────────────────────────────────────────
 const bgStyle: React.CSSProperties = {
   background:
@@ -139,6 +206,7 @@ export default function OnboardingPage() {
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [phoneLoading, setPhoneLoading] = useState(false);
+  const [showNoAccount, setShowNoAccount] = useState(false);
   const [registrationId, setRegistrationId] = useState('');
   const [participantName, setParticipantName] = useState('');
 
@@ -200,8 +268,8 @@ export default function OnboardingPage() {
       const match = (rows as { id: string; full_name: string; status: string }[] | null)?.[0];
 
       if (!match) {
-        setPhoneError('Número não encontrado. Usa o mesmo que colocaste na inscrição.');
         setPhoneLoading(false);
+        setShowNoAccount(true);
         return;
       }
 
@@ -253,6 +321,9 @@ export default function OnboardingPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div style={{ ...bgStyle, color: '#fff' }}>
+      {showNoAccount && (
+        <NoAccountModal phone={phone} onClose={() => setShowNoAccount(false)} />
+      )}
       <BgLayer />
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 420, margin: '0 auto', padding: '48px 18px 60px' }}>
 

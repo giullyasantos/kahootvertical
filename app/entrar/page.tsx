@@ -14,7 +14,7 @@ export default function EntrarPage() {
     const session = getSession();
 
     if (!session?.registrationId) {
-      router.replace('/register');
+      router.replace('/onboarding');
       return;
     }
 
